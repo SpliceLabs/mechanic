@@ -74,8 +74,18 @@ program
 
 program
   .command("scan")
-  .description("Find unmanaged skills in scope dirs and adopt them")
-  .action(scan);
+  .description(
+    "Find unmanaged skills and adopt them. Without args scans user + project " +
+      "scopes; with a path, recursively walks that directory.",
+  )
+  .argument(
+    "[dir]",
+    "directory to scan instead of user/project scopes (read-only adoption)",
+  )
+  .option("-v, --verbose", "Log every path inspected and why it was kept or skipped")
+  .action((dir: string | undefined, opts: { verbose?: boolean }) =>
+    scan({ dir, verbose: opts.verbose }),
+  );
 
 program
   .command("init")
