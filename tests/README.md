@@ -37,6 +37,7 @@ tests/
     scope.test.ts
   integration/
     cli.test.ts      # spawn the built binary, exercise commands
+    git.test.ts      # spawn against a real local bare repo fixture
 ```
 
 ## Coverage rationale
@@ -52,11 +53,12 @@ tests/
 | `lib/gitignore` | Idempotency is the whole point — duplicate entries are a daily papercut. |
 | `lib/scope` | Project detection + auto-create gate. Wrong scope = symlink in wrong directory. |
 | CLI integration | Verifies commander wiring, exit codes, end-to-end filesystem effects in an isolated HOME. |
+| git integration | Spins up a local bare repo via `tests/helpers/git-fixture.ts` and exercises `add` (clone + sha), `update` (fast-forward to new commit), and `install` (full clone + checkout of pinned ref). No network. |
 
 ### What we deliberately skip
 
 - **`lib/paths`** — trivial constants and a simple ancestor walk (covered indirectly via `scope`).
-- **`lib/git`** — wraps the `git` binary; testing it means either mocking subprocesses (low value) or spinning up real repos (slow, flaky). Out of scope for unit tests. Integration left to `update` exercises in dev.
+- **`lib/git` (unit)** — wraps the `git` binary; mocking subprocesses is low value. The behavior is covered end-to-end in `integration/git.test.ts` against a real local bare repo, which is a more honest test of what the wrapper is for.
 - **commander wiring details** — covered by the one integration smoke test; per-flag unit tests would just retest commander.
 - **picocolors output** — visual only.
 - **Interactive prompts (`add` conflict, `scan` checkbox)** — would require driving stdin against TTY-only widgets. Not worth the mocking burden. The non-interactive paths exercise the underlying primitives.
