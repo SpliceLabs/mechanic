@@ -4,9 +4,9 @@ import path from "node:path";
 import { scan } from "../../src/commands/scan.js";
 import { loadRegistry } from "../../src/lib/registry.js";
 import { skillsStore } from "../../src/lib/paths.js";
-import { isOurSymlink } from "../../src/lib/symlink.js";
 import {
   createSandbox,
+  markProject,
   writeSkillFixture,
   type Sandbox,
 } from "../helpers/sandbox.js";
@@ -50,7 +50,7 @@ describe("scan with explicit dir", () => {
     expect(reg.skills["inner"]).toBeUndefined();
   });
 
-  it("external adoption symlinks store -> source without mutating the source", async () => {
+  it("adoption copies the skill into the store and leaves the source untouched", async () => {
     sb = createSandbox();
     const source = path.join(sb.base, "src-tree", "my-skill");
     writeSkillFixture(source, "my-skill");
@@ -59,12 +59,38 @@ describe("scan with explicit dir", () => {
     await scan({ dir: path.dirname(source) });
 
     const store = path.join(skillsStore(), "my-skill");
-    expect(isOurSymlink(store, source)).toBe(true);
+    // store is a real directory containing a copy, not a symlink
+    expect(fs.lstatSync(store).isDirectory()).toBe(true);
+    expect(fs.lstatSync(store).isSymbolicLink()).toBe(false);
+    expect(fs.readFileSync(path.join(store, "SKILL.md"), "utf8")).toBe(
+      originalSkillMd,
+    );
     // source must still be a real directory, untouched
     expect(fs.lstatSync(source).isDirectory()).toBe(true);
+    expect(fs.lstatSync(source).isSymbolicLink()).toBe(false);
     expect(fs.readFileSync(path.join(source, "SKILL.md"), "utf8")).toBe(
       originalSkillMd,
     );
+    // registry source.url points back at the original
+    expect(loadRegistry().skills["my-skill"].source.url).toBe(source);
+  });
+
+  it("project-scope adoption does not mutate the scope dir or write the lock", async () => {
+    sb = createSandbox();
+    markProject(sb.cwd);
+    const scopeSkillDir = path.join(sb.cwd, ".claude", "skills", "proj-skill");
+    writeSkillFixture(scopeSkillDir, "proj-skill");
+
+    await scan({});
+
+    // adoption registered the skill and copied it
+    expect(loadRegistry().skills["proj-skill"]).toBeDefined();
+    expect(fs.lstatSync(path.join(skillsStore(), "proj-skill")).isDirectory()).toBe(true);
+    // the scope dir is still a real, untouched directory
+    expect(fs.lstatSync(scopeSkillDir).isDirectory()).toBe(true);
+    expect(fs.lstatSync(scopeSkillDir).isSymbolicLink()).toBe(false);
+    // scan is adoption-only: it does NOT write the project lock
+    expect(fs.existsSync(path.join(sb.cwd, "mechanic.lock"))).toBe(false);
   });
 
   it("disambiguates duplicate proposed ids as id, id-2, id-3", async () => {

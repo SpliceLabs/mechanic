@@ -47,6 +47,7 @@ program
   .description("Activate a skill in a scope")
   .argument("<id>")
   .option("-s, --scope <scope>", "user | project")
+  .option("--replace", "If a real directory occupies the scope path, remove it first")
   .action(enable);
 
 program

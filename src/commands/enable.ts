@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import pc from "picocolors";
 import { loadRegistry } from "../lib/registry.js";
@@ -14,7 +15,7 @@ import { ensureGitignore } from "../lib/gitignore.js";
 
 export async function enable(
   id: string,
-  opts: { scope?: string },
+  opts: { scope?: string; replace?: boolean },
 ): Promise<void> {
   const reg = loadRegistry();
   const s = reg.skills[id];
@@ -24,6 +25,24 @@ export async function enable(
   const scopeDir = resolveScopeDir(scope, { create: scope === "project" });
   const target = path.join(skillsStore(), id);
   const link = path.join(scopeDir, "skills", s.name);
+
+  let existing: fs.Stats | null = null;
+  try {
+    existing = fs.lstatSync(link);
+  } catch {
+    /* missing */
+  }
+
+  if (existing && !existing.isSymbolicLink()) {
+    if (!opts.replace) {
+      throw new Error(
+        `${link} exists as a real directory. Re-run with --replace to remove it ` +
+          `and activate the mechanic-managed symlink in its place.`,
+      );
+    }
+    fs.rmSync(link, { recursive: true, force: true });
+  }
+
   makeSymlink(target, link);
 
   if (scope === "project") {

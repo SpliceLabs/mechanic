@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import pc from "picocolors";
 import { loadRegistry, saveRegistry } from "../lib/registry.js";
@@ -28,19 +29,46 @@ export async function update(
       console.log(pc.yellow(`skip ${sid}: not registered`));
       continue;
     }
-    if (s.source.type !== "git") {
-      console.log(pc.dim(`skip ${sid}: local source`));
+
+    if (s.source.type === "git") {
+      const dir = path.join(skillsStore(), sid);
+      gitPull(dir);
+      const ref = gitHeadSha(dir);
+      s.ref = ref;
+      if (root && lockedIds.has(sid)) {
+        upsertLock(root, { id: sid, source: s.source, ref });
+      }
+      console.log(
+        `${pc.green("✓ updated")} ${pc.bold(sid)} ${pc.dim(`→ ${ref.slice(0, 8)}`)}`,
+      );
       continue;
     }
-    const dir = path.join(skillsStore(), sid);
-    gitPull(dir);
-    const ref = gitHeadSha(dir);
-    s.ref = ref;
-    if (root && lockedIds.has(sid)) {
-      upsertLock(root, { id: sid, source: s.source, ref });
+
+    // local source: re-copy from origin if the store holds a real-dir copy.
+    // Store entries that are themselves symlinks (e.g. `mechanic add <path>`
+    // semantics) follow the source directly — nothing to refresh.
+    const store = path.join(skillsStore(), sid);
+    let storeStat: fs.Stats;
+    try {
+      storeStat = fs.lstatSync(store);
+    } catch {
+      console.log(pc.yellow(`skip ${sid}: store entry missing`));
+      continue;
     }
+    if (storeStat.isSymbolicLink()) {
+      console.log(pc.dim(`skip ${sid}: linked local source — already live`));
+      continue;
+    }
+    if (!fs.existsSync(s.source.url)) {
+      console.log(
+        pc.yellow(`skip ${sid}: source path missing (${s.source.url})`),
+      );
+      continue;
+    }
+    fs.rmSync(store, { recursive: true, force: true });
+    fs.cpSync(s.source.url, store, { recursive: true });
     console.log(
-      `${pc.green("✓ updated")} ${pc.bold(sid)} ${pc.dim(`→ ${ref.slice(0, 8)}`)}`,
+      `${pc.green("✓ refreshed")} ${pc.bold(sid)} ${pc.dim(`from ${s.source.url}`)}`,
     );
   }
   saveRegistry(reg);

@@ -58,11 +58,11 @@ Activation is a symlink from the scope directory back to the store. Deactivation
 | `mechanic add <source>` | Register a skill from a git URL or a local path. |
 | `mechanic list` | Show every registered skill and whether it's active in each scope. |
 | `mechanic info <id>` | Print details for one skill: source, ref, store path, active scopes. |
-| `mechanic enable <id> [--scope user\|project]` | Activate a skill in a scope. Defaults to project if you're inside one. |
+| `mechanic enable <id> [--scope user\|project] [--replace]` | Activate a skill in a scope. Defaults to project if you're inside one. `--replace` removes a real directory at the scope path before installing the symlink. |
 | `mechanic disable <id> [--scope ...]` | Deactivate a skill in a scope. |
 | `mechanic remove <id>` | Deactivate everywhere, delete the store entry, drop the registry record. |
-| `mechanic update [id] [--all]` | Pull updates for git-sourced skills. |
-| `mechanic scan [dir] [--verbose]` | Find unmanaged skills and adopt them. Without args, walks user + project scope `.claude/skills/` directories. With a path, recursively walks that directory (depth 5) — useful for discovering skills inside arbitrary repos. `--verbose` logs every path inspected and why it was kept or skipped. Interactive checklist. |
+| `mechanic update [id] [--all]` | Pull updates for git-sourced skills. For local sources held as a copy in the store, re-copies from the original path so edits at the source land in the store. |
+| `mechanic scan [dir] [--verbose]` | Find unmanaged skills and **copy** them into the store. Source trees are never mutated. Without args, walks user + project scope `.claude/skills/` directories. With a path, recursively walks that directory (depth 5). `--verbose` logs every path inspected and why it was kept or skipped. Adoption only registers + copies — to activate an adopted skill in a scope, run `mechanic enable <id> [--scope ...]` (use `--replace` if the scope path is still occupied by the original real directory). Interactive checklist supports type-to-search, `q` to quit, `esc` to clear filter. |
 | `mechanic init` | Mark the current directory as a mechanic project (`.mechanic.json` + `.gitignore`). |
 | `mechanic install` | Apply `mechanic.lock`: clone or symlink each pinned skill, register it, and enable it at project scope. |
 | `mechanic doctor [--fix]` | Diagnose broken symlinks, orphan store directories, and stale registry entries. `--fix` cleans them up. |

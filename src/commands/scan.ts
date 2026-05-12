@@ -294,23 +294,14 @@ export async function scan(
     }
     const dest = path.join(skillsStore(), id);
 
-    let sourceUrl: string;
-    if (c.origin === "external") {
-      // `mechanic add <path>` semantics: store entry symlinks to the source.
-      // Don't mutate the source tree.
-      fs.symlinkSync(c.pathOnDisk, dest);
-      sourceUrl = c.pathOnDisk;
-    } else {
-      // user/project scope: move the dir into the store, leave a symlink
-      // behind so the scope still resolves the skill.
-      fs.renameSync(c.pathOnDisk, dest);
-      fs.symlinkSync(dest, c.pathOnDisk);
-      sourceUrl = dest;
-    }
+    // Copy semantics for every origin: the source tree is never mutated.
+    // The original path is recorded as the source so `mechanic update` can
+    // refresh the store copy later.
+    fs.cpSync(c.pathOnDisk, dest, { recursive: true });
 
     reg.skills[id] = {
       name: c.name,
-      source: { type: "local", url: sourceUrl },
+      source: { type: "local", url: c.pathOnDisk },
       ref: null,
       installedAt: new Date().toISOString(),
     };
