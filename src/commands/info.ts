@@ -7,6 +7,7 @@ import {
   findProjectRoot,
 } from "../lib/paths.js";
 import { isOurSymlink } from "../lib/symlink.js";
+import { readSkillFrontmatter } from "../lib/skill.js";
 
 export async function info(id: string): Promise<void> {
   const reg = loadRegistry();
@@ -17,8 +18,13 @@ export async function info(id: string): Promise<void> {
     return;
   }
   const store = path.join(skillsStore(), id);
+  let description: string | undefined;
+  try {
+    description = readSkillFrontmatter(store).description;
+  } catch {}
   console.log(pc.bold(id));
   console.log(`  name:    ${s.name}`);
+  if (description) console.log(`  desc:    ${description}`);
   console.log(`  source:  ${s.source.type} ${s.source.url}`);
   console.log(`  ref:     ${s.ref ?? pc.dim("(local)")}`);
   console.log(`  store:   ${store}`);

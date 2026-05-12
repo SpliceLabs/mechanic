@@ -38,7 +38,7 @@ function isPrintable(seq: string | undefined): boolean {
 }
 
 const HELP_IDLE = pc.dim(
-  "↑/↓ move · space toggle · type to search · enter confirm · q quit",
+  "↑/↓ move · space toggle · type to search · enter confirm · esc quit",
 );
 
 const helpSearch = (q: string) =>
@@ -116,7 +116,7 @@ export const skillPicker = createPrompt<number[], PickerConfig>(
       }
 
       // idle (non-search)
-      if (key.name === "q") {
+      if (key.name === "escape") {
         setStatus("quit");
         done([]);
         return;

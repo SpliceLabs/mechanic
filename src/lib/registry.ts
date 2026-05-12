@@ -2,7 +2,7 @@ import fs from "node:fs";
 import { registryPath, ensureMechanicHome } from "./paths.js";
 
 export interface SkillSource {
-  type: "git" | "local";
+  type: "git" | "local" | "archive";
   url: string;
 }
 

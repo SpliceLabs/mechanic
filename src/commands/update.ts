@@ -44,6 +44,11 @@ export async function update(
       continue;
     }
 
+    if (s.source.type === "archive") {
+      console.log(pc.dim(`skip ${sid}: archive install is frozen`));
+      continue;
+    }
+
     // local source: re-copy from origin if the store holds a real-dir copy.
     // Store entries that are themselves symlinks (e.g. `mechanic add <path>`
     // semantics) follow the source directly — nothing to refresh.

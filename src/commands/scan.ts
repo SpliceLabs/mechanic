@@ -19,6 +19,7 @@ interface Candidate {
   pathOnDisk: string;
   name: string;
   proposedId: string;
+  description?: string;
 }
 
 type Verdict =
@@ -121,6 +122,7 @@ function scanScope(
       pathOnDisk: full,
       name: fm.name,
       proposedId: id,
+      description: fm.description,
     });
     decisions.push({
       path: full,
@@ -162,6 +164,7 @@ function scanExternal(root: string, reg: Registry): ScanResult {
           pathOnDisk: dir,
           name: fm.name,
           proposedId: id,
+          description: fm.description,
         });
         decisions.push({
           path: dir,
@@ -269,13 +272,23 @@ export async function scan(
     return;
   }
 
+  const cols = process.stdout.columns ?? 80;
   const picked = await skillPicker({
     message: "Select skills to adopt",
-    items: candidates.map((c, i) => ({
-      value: i,
-      label: `${c.proposedId.padEnd(24)} ${pc.dim(`${c.origin}: ${c.pathOnDisk}`)}`,
-      searchKey: `${c.proposedId} ${c.name} ${c.pathOnDisk} ${c.origin}`,
-    })),
+    items: candidates.map((c, i) => {
+      const headRaw = `${c.proposedId.padEnd(24)} ${c.origin}`;
+      const head = `${c.proposedId.padEnd(24)} ${pc.dim(c.origin)}`;
+      const tail = c.description ?? c.pathOnDisk;
+      // 6 = "> [x] " prefix from picker, 3 = " · "
+      const budget = Math.max(20, cols - 6 - headRaw.length - 3);
+      const tailTrunc =
+        tail.length > budget ? tail.slice(0, budget - 1) + "…" : tail;
+      return {
+        value: i,
+        label: `${head} ${pc.dim(`· ${tailTrunc}`)}`,
+        searchKey: `${c.proposedId} ${c.name} ${c.pathOnDisk} ${c.origin} ${c.description ?? ""}`,
+      };
+    }),
     pageSize: 15,
   });
 
