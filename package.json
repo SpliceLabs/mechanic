@@ -1,13 +1,32 @@
 {
   "name": "@splice-labs/mechanic",
   "version": "0.1.0",
-  "description": "Mechanic CLI",
+  "description": "Skill registry and scope manager for Claude Code. Register skills once, toggle them per scope.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "skills",
+    "cli",
+    "registry"
+  ],
+  "homepage": "https://github.com/splice-labs/mechanic#readme",
+  "bugs": {
+    "url": "https://github.com/splice-labs/mechanic/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/splice-labs/mechanic.git"
+  },
+  "license": "MIT",
+  "author": "Splice Labs",
   "type": "module",
   "bin": {
     "mechanic": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc",
@@ -17,6 +36,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "prepublishOnly": "npm run build"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "engines": {
     "node": ">=18"
