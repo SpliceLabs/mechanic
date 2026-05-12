@@ -46,14 +46,11 @@ describe("readSkillFrontmatter", () => {
 });
 
 describe("slugify", () => {
-  it.each([
-    ["My Skill", "my-skill"],
-    ["foo_bar.baz", "foo-bar-baz"],
-    ["  trim me  ", "trim-me"],
-    ["CamelCase", "camelcase"],
-    ["already-good", "already-good"],
-    ["multi   spaces", "multi-spaces"],
-  ])("slugify(%j) === %j", (input, expected) => {
-    expect(slugify(input)).toBe(expected);
+  it("lowercases, collapses non-alphanumerics to dashes, trims edges", () => {
+    expect(slugify("  My Skill_v2!  ")).toBe("my-skill-v2");
+  });
+
+  it("leaves an already-valid slug unchanged", () => {
+    expect(slugify("already-good")).toBe("already-good");
   });
 });

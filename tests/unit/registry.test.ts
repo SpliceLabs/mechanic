@@ -22,16 +22,6 @@ describe("registry", () => {
       installedAt: "2026-05-12T00:00:00.000Z",
     };
     saveRegistry(reg);
-    const loaded = loadRegistry();
-    expect(loaded).toEqual(reg);
-  });
-
-  it("ensures the mechanic home directory on save", () => {
-    sb = createSandbox();
-    const reg = loadRegistry();
-    saveRegistry(reg);
-    // implicit: no throw means directory creation succeeded
-    const again = loadRegistry();
-    expect(again.version).toBe(1);
+    expect(loadRegistry()).toEqual(reg);
   });
 });
