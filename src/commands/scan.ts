@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import pc from "picocolors";
-import { checkbox } from "@inquirer/prompts";
+import { skillPicker } from "../lib/skill-picker.js";
 import { loadRegistry, saveRegistry, type Registry } from "../lib/registry.js";
 import {
   skillsStore,
@@ -269,12 +269,14 @@ export async function scan(
     return;
   }
 
-  const picked = await checkbox<number>({
-    message: "Select skills to adopt (space toggles, enter confirms):",
-    choices: candidates.map((c, i) => ({
-      name: `${c.proposedId.padEnd(24)} ${pc.dim(`${c.origin}: ${c.pathOnDisk}`)}`,
+  const picked = await skillPicker({
+    message: "Select skills to adopt",
+    items: candidates.map((c, i) => ({
       value: i,
+      label: `${c.proposedId.padEnd(24)} ${pc.dim(`${c.origin}: ${c.pathOnDisk}`)}`,
+      searchKey: `${c.proposedId} ${c.name} ${c.pathOnDisk} ${c.origin}`,
     })),
+    pageSize: 15,
   });
 
   if (picked.length === 0) {

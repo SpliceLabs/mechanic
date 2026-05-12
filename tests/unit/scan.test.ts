@@ -11,11 +11,12 @@ import {
   type Sandbox,
 } from "../helpers/sandbox.js";
 
-// Drive scan non-interactively by stubbing the inquirer checkbox to auto-select
-// every candidate. Adoption decisions are not what we're testing.
-vi.mock("@inquirer/prompts", () => ({
-  checkbox: async ({ choices }: { choices: Array<{ value: number }> }) =>
-    choices.map((c) => c.value),
+// Drive scan non-interactively by stubbing the picker to auto-select every
+// candidate. The picker itself is TTY-only and not unit-tested here — its
+// behavior must be smoke-tested by running `mechanic scan` interactively.
+vi.mock("../../src/lib/skill-picker.js", () => ({
+  skillPicker: async ({ items }: { items: Array<{ value: number }> }) =>
+    items.map((c) => c.value),
 }));
 
 let sb: Sandbox;
