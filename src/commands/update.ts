@@ -1,7 +1,7 @@
 import path from "node:path";
 import pc from "picocolors";
 import { loadRegistry, saveRegistry } from "../lib/registry.js";
-import { SKILLS_STORE, findProjectRoot } from "../lib/paths.js";
+import { skillsStore, findProjectRoot } from "../lib/paths.js";
 import { gitPull, gitHeadSha } from "../lib/git.js";
 import { loadLock, upsertLock } from "../lib/lock.js";
 
@@ -32,7 +32,7 @@ export async function update(
       console.log(pc.dim(`skip ${sid}: local source`));
       continue;
     }
-    const dir = path.join(SKILLS_STORE, sid);
+    const dir = path.join(skillsStore(), sid);
     gitPull(dir);
     const ref = gitHeadSha(dir);
     s.ref = ref;

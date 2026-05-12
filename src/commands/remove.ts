@@ -3,8 +3,8 @@ import path from "node:path";
 import pc from "picocolors";
 import { loadRegistry, saveRegistry } from "../lib/registry.js";
 import {
-  SKILLS_STORE,
-  USER_CLAUDE,
+  skillsStore,
+  userClaude,
   findProjectRoot,
 } from "../lib/paths.js";
 import { safeUnlink } from "../lib/symlink.js";
@@ -15,8 +15,8 @@ export async function remove(id: string): Promise<void> {
   const s = reg.skills[id];
   if (!s) throw new Error(`Unknown skill: ${id}`);
 
-  const store = path.join(SKILLS_STORE, id);
-  safeUnlink(path.join(USER_CLAUDE, "skills", s.name), store);
+  const store = path.join(skillsStore(), id);
+  safeUnlink(path.join(userClaude(), "skills", s.name), store);
   const root = findProjectRoot();
   if (root) {
     safeUnlink(path.join(root, ".claude/skills", s.name), store);

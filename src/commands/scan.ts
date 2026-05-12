@@ -4,8 +4,8 @@ import pc from "picocolors";
 import { checkbox } from "@inquirer/prompts";
 import { loadRegistry, saveRegistry, type Registry } from "../lib/registry.js";
 import {
-  SKILLS_STORE,
-  USER_CLAUDE,
+  skillsStore,
+  userClaude,
   findProjectRoot,
   ensureMechanicHome,
 } from "../lib/paths.js";
@@ -37,7 +37,7 @@ function scanScope(
     if (stat.isSymbolicLink()) {
       const tgt = fs.readlinkSync(full);
       const resolved = path.resolve(path.dirname(full), tgt);
-      if (resolved.startsWith(path.resolve(SKILLS_STORE))) continue;
+      if (resolved.startsWith(path.resolve(skillsStore()))) continue;
     } else if (!stat.isDirectory()) {
       continue;
     }
@@ -57,7 +57,7 @@ export async function scan(): Promise<void> {
   ensureMechanicHome();
   const reg = loadRegistry();
   const candidates: Candidate[] = [];
-  candidates.push(...scanScope("user", USER_CLAUDE, reg));
+  candidates.push(...scanScope("user", userClaude(), reg));
   const root = findProjectRoot();
   if (root) {
     candidates.push(...scanScope("project", path.join(root, ".claude"), reg));
@@ -85,7 +85,7 @@ export async function scan(): Promise<void> {
     const c = candidates[i];
     let id = c.proposedId;
     while (reg.skills[id]) id = `${id}-2`;
-    const dest = path.join(SKILLS_STORE, id);
+    const dest = path.join(skillsStore(), id);
 
     fs.renameSync(c.pathOnDisk, dest);
     fs.symlinkSync(dest, c.pathOnDisk);

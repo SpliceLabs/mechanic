@@ -1,7 +1,7 @@
 import path from "node:path";
 import pc from "picocolors";
 import { loadRegistry } from "../lib/registry.js";
-import { SKILLS_STORE, findProjectRoot } from "../lib/paths.js";
+import { skillsStore, findProjectRoot } from "../lib/paths.js";
 import {
   resolveScopeDir,
   defaultScope,
@@ -22,7 +22,7 @@ export async function disable(
   const scope: Scope = parseScope(opts.scope) ?? defaultScope();
   const scopeDir = resolveScopeDir(scope);
   const link = path.join(scopeDir, "skills", s.name);
-  const ok = safeUnlink(link, path.join(SKILLS_STORE, id));
+  const ok = safeUnlink(link, path.join(skillsStore(), id));
 
   if (!ok) {
     console.log(

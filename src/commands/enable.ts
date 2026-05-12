@@ -1,7 +1,7 @@
 import path from "node:path";
 import pc from "picocolors";
 import { loadRegistry } from "../lib/registry.js";
-import { SKILLS_STORE, findProjectRoot } from "../lib/paths.js";
+import { skillsStore, findProjectRoot } from "../lib/paths.js";
 import {
   resolveScopeDir,
   defaultScope,
@@ -22,7 +22,7 @@ export async function enable(
 
   const scope: Scope = parseScope(opts.scope) ?? defaultScope();
   const scopeDir = resolveScopeDir(scope, { create: scope === "project" });
-  const target = path.join(SKILLS_STORE, id);
+  const target = path.join(skillsStore(), id);
   const link = path.join(scopeDir, "skills", s.name);
   makeSymlink(target, link);
 

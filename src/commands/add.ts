@@ -2,10 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import pc from "picocolors";
 import { input } from "@inquirer/prompts";
-import {
-  SKILLS_STORE,
-  ensureMechanicHome,
-} from "../lib/paths.js";
+import { skillsStore, ensureMechanicHome } from "../lib/paths.js";
 import { gitClone, gitHeadSha } from "../lib/git.js";
 import { readSkillFrontmatter, slugify } from "../lib/skill.js";
 import { loadRegistry, saveRegistry, type SkillSource } from "../lib/registry.js";
@@ -24,7 +21,7 @@ export async function add(source: string): Promise<void> {
   let tmpClone: string | null = null;
 
   if (isGitUrl(source)) {
-    tmpClone = path.join(SKILLS_STORE, `.tmp-${Date.now()}`);
+    tmpClone = path.join(skillsStore(), `.tmp-${Date.now()}`);
     gitClone(source, tmpClone);
     ref = gitHeadSha(tmpClone);
     sourceMeta = { type: "git", url: source };
@@ -54,7 +51,7 @@ export async function add(source: string): Promise<void> {
     }
   }
 
-  const finalStore = path.join(SKILLS_STORE, id);
+  const finalStore = path.join(skillsStore(), id);
   if (sourceMeta.type === "git") {
     fs.renameSync(tmpClone!, finalStore);
   } else {

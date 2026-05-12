@@ -2,8 +2,8 @@ import path from "node:path";
 import pc from "picocolors";
 import { loadRegistry } from "../lib/registry.js";
 import {
-  SKILLS_STORE,
-  USER_CLAUDE,
+  skillsStore,
+  userClaude,
   findProjectRoot,
 } from "../lib/paths.js";
 import { isOurSymlink } from "../lib/symlink.js";
@@ -16,7 +16,7 @@ export async function info(id: string): Promise<void> {
     process.exitCode = 1;
     return;
   }
-  const store = path.join(SKILLS_STORE, id);
+  const store = path.join(skillsStore(), id);
   console.log(pc.bold(id));
   console.log(`  name:    ${s.name}`);
   console.log(`  source:  ${s.source.type} ${s.source.url}`);
@@ -25,7 +25,7 @@ export async function info(id: string): Promise<void> {
   console.log(`  added:   ${s.installedAt}`);
 
   const active: string[] = [];
-  if (isOurSymlink(path.join(USER_CLAUDE, "skills", s.name), store)) {
+  if (isOurSymlink(path.join(userClaude(), "skills", s.name), store)) {
     active.push("user");
   }
   const root = findProjectRoot();

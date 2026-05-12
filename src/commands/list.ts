@@ -2,15 +2,15 @@ import path from "node:path";
 import pc from "picocolors";
 import { loadRegistry } from "../lib/registry.js";
 import {
-  SKILLS_STORE,
-  USER_CLAUDE,
+  skillsStore,
+  userClaude,
   findProjectRoot,
 } from "../lib/paths.js";
 import { isOurSymlink } from "../lib/symlink.js";
 
 function activeIn(scopeDir: string, id: string, name: string): boolean {
   const link = path.join(scopeDir, "skills", name);
-  return isOurSymlink(link, path.join(SKILLS_STORE, id));
+  return isOurSymlink(link, path.join(skillsStore(), id));
 }
 
 export async function list(): Promise<void> {
@@ -30,7 +30,7 @@ export async function list(): Promise<void> {
       id,
       name: s.name,
       src: s.source.type,
-      user: activeIn(USER_CLAUDE, id, s.name),
+      user: activeIn(userClaude(), id, s.name),
       proj: projectClaude ? activeIn(projectClaude, id, s.name) : false,
     };
   });

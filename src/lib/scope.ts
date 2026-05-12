@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { USER_CLAUDE, findProjectRoot, PROJECT_MARKER } from "./paths.js";
+import { userClaude, findProjectRoot, PROJECT_MARKER } from "./paths.js";
 
 export type Scope = "user" | "project";
 
@@ -8,7 +8,7 @@ export function resolveScopeDir(
   scope: Scope,
   opts: { create?: boolean } = {},
 ): string {
-  if (scope === "user") return USER_CLAUDE;
+  if (scope === "user") return userClaude();
   let root = findProjectRoot();
   if (!root) {
     if (!opts.create) {

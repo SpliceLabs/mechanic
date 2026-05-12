@@ -2,17 +2,33 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-export const MECHANIC_HOME = path.join(os.homedir(), ".mechanic");
-export const SKILLS_STORE = path.join(MECHANIC_HOME, "skills");
-export const REGISTRY_PATH = path.join(MECHANIC_HOME, "registry.json");
-
-export const USER_CLAUDE = path.join(os.homedir(), ".claude");
-export const USER_SKILLS = path.join(USER_CLAUDE, "skills");
-
 export const PROJECT_MARKER = ".mechanic.json";
 
+// Paths derived from $HOME are exposed as functions so tests can mutate
+// process.env.HOME after module load and still see fresh values.
+
+export function mechanicHome(): string {
+  return path.join(os.homedir(), ".mechanic");
+}
+
+export function skillsStore(): string {
+  return path.join(mechanicHome(), "skills");
+}
+
+export function registryPath(): string {
+  return path.join(mechanicHome(), "registry.json");
+}
+
+export function userClaude(): string {
+  return path.join(os.homedir(), ".claude");
+}
+
+export function userSkills(): string {
+  return path.join(userClaude(), "skills");
+}
+
 export function ensureMechanicHome(): void {
-  fs.mkdirSync(SKILLS_STORE, { recursive: true });
+  fs.mkdirSync(skillsStore(), { recursive: true });
 }
 
 export function findProjectRoot(from: string = process.cwd()): string | null {
