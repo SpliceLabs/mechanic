@@ -1,6 +1,6 @@
 # Tests
 
-Test strategy for `@splice-labs/mechanic`.
+Test strategy for `@splicelabs/mechanic`.
 
 ## Goal
 

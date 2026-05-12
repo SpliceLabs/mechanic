@@ -1,4 +1,4 @@
-# @splice-labs/mechanic
+# @splicelabs/mechanic
 
 A skill registry and scope manager for [Claude Code](https://claude.com/claude-code).
 
@@ -7,7 +7,7 @@ Register a skill once from a Git URL or local path, then toggle it on or off acr
 ## Install
 
 ```sh
-npm install -g @splice-labs/mechanic
+npm install -g @splicelabs/mechanic
 ```
 
 Requires Node 18+ and `git` on `PATH`.
@@ -81,7 +81,7 @@ my-project/
 ## Development
 
 ```sh
-git clone https://github.com/splice-labs/mechanic.git
+git clone https://github.com/SpliceLabs/mechanic.git
 cd mechanic
 npm install
 npm test                # build + run vitest

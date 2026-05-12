@@ -1,5 +1,5 @@
 {
-  "name": "@splice-labs/mechanic",
+  "name": "@splicelabs/mechanic",
   "version": "0.1.0",
   "description": "Skill registry and scope manager for Claude Code. Register skills once, toggle them per scope.",
   "keywords": [
@@ -9,13 +9,13 @@
     "cli",
     "registry"
   ],
-  "homepage": "https://github.com/splice-labs/mechanic#readme",
+  "homepage": "https://github.com/SpliceLabs/mechanic#readme",
   "bugs": {
-    "url": "https://github.com/splice-labs/mechanic/issues"
+    "url": "https://github.com/SpliceLabs/mechanic/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/splice-labs/mechanic.git"
+    "url": "git+https://github.com/SpliceLabs/mechanic.git"
   },
   "license": "MIT",
   "author": "Splice Labs",
