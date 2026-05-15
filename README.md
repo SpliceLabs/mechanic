@@ -18,6 +18,18 @@ Requires Node 18+ and `git` on `PATH`.
 # register a skill from GitHub
 mechanic add https://github.com/some-org/cool-skill.git
 
+# shorthand: owner/repo
+mechanic add some-org/cool-skill
+
+# a skill inside a monorepo (subpath, branch, or @name filter)
+mechanic add anthropics/skills/skills/canvas-design
+mechanic add anthropics/skills@canvas-design
+mechanic add some-org/cool-skill#feature-branch
+
+# or from GitLab
+mechanic add gitlab:group/repo
+mechanic add https://gitlab.com/group/subgroup/repo/-/tree/main/path
+
 # or from a local directory you're authoring
 mechanic add ./my-skill
 
@@ -60,7 +72,7 @@ Activation is a symlink from the scope directory back to the store. Deactivation
 
 | Command | Description |
 | --- | --- |
-| `mechanic add <source>` | Register a skill from a git URL, a local path, or a `.skill` zip archive. |
+| `mechanic add <source>` | Register a skill. Sources: git URL, GitHub shorthand (`owner/repo`, with optional `/subpath`, `@skill-name`, or `#ref`), GitLab URL or `gitlab:owner/repo`, local path, or a `.skill` zip archive. |
 | `mechanic list` | Show every registered skill and whether it's active in each scope. |
 | `mechanic info <id>` | Print details for one skill: source, ref, store path, active scopes. |
 | `mechanic enable <id> [--scope user\|project] [--replace]` | Activate a skill in a scope. Defaults to project if you're inside one. `--replace` removes a real directory at the scope path before installing the symlink. |

@@ -8,6 +8,7 @@ import {
 } from "../lib/paths.js";
 import { isOurSymlink } from "../lib/symlink.js";
 import { readSkillFrontmatter } from "../lib/skill.js";
+import { sanitizeMetadata } from "../lib/sanitize.js";
 
 function activeIn(scopeDir: string, id: string, name: string): boolean {
   const link = path.join(scopeDir, "skills", name);
@@ -35,11 +36,11 @@ export async function list(): Promise<void> {
     } catch {}
     return {
       id,
-      name: s.name,
+      name: sanitizeMetadata(s.name),
       src: s.source.type,
       user: activeIn(userClaude(), id, s.name),
       proj: projectClaude ? activeIn(projectClaude, id, s.name) : false,
-      description: description ?? "",
+      description: description ? sanitizeMetadata(description) : "",
     };
   });
 

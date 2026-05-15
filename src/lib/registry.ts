@@ -4,6 +4,10 @@ import { registryPath, ensureMechanicHome } from "./paths.js";
 export interface SkillSource {
   type: "git" | "local" | "archive";
   url: string;
+  /** Branch/tag to track for git sources (omit for default branch). */
+  ref?: string;
+  /** Subdirectory within the repo that contains the skill. */
+  subpath?: string;
 }
 
 export interface SkillEntry {

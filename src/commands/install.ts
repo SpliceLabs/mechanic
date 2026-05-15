@@ -13,7 +13,7 @@ import {
   type SkillEntry,
 } from "../lib/registry.js";
 import { gitClone, gitCheckout, gitHeadSha } from "../lib/git.js";
-import { readSkillFrontmatter } from "../lib/skill.js";
+import { readSkillFrontmatter, selectSkillFromClone } from "../lib/skill.js";
 import { makeSymlink } from "../lib/symlink.js";
 import { ensureGitignore } from "../lib/gitignore.js";
 
@@ -40,15 +40,38 @@ export async function install(): Promise<void> {
 
     if (!regEntry) {
       if (entry.source.type === "git") {
+        let resolvedRef: string | null = entry.ref ?? null;
         if (!fs.existsSync(store)) {
-          gitClone(entry.source.url, store, { shallow: !entry.ref });
-          if (entry.ref) gitCheckout(store, entry.ref);
+          if (entry.source.subpath) {
+            const tmp = path.join(skillsStore(), `.tmp-install-${entry.id}-${Date.now()}`);
+            try {
+              gitClone(entry.source.url, tmp, {
+                shallow: !entry.ref,
+                ref: entry.source.ref,
+              });
+              if (entry.ref) gitCheckout(tmp, entry.ref);
+              const picked = selectSkillFromClone(tmp, {
+                subpath: entry.source.subpath,
+              });
+              if (!resolvedRef) resolvedRef = gitHeadSha(tmp);
+              fs.cpSync(picked.dir, store, { recursive: true });
+            } finally {
+              fs.rmSync(tmp, { recursive: true, force: true });
+            }
+          } else {
+            gitClone(entry.source.url, store, {
+              shallow: !entry.ref,
+              ref: entry.source.ref,
+            });
+            if (entry.ref) gitCheckout(store, entry.ref);
+            if (!resolvedRef) resolvedRef = gitHeadSha(store);
+          }
         }
         const fm = readSkillFrontmatter(store);
         regEntry = {
           name: fm.name,
           source: entry.source,
-          ref: entry.ref ?? gitHeadSha(store),
+          ref: resolvedRef,
           installedAt: new Date().toISOString(),
         };
       } else {

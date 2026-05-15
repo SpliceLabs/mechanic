@@ -10,6 +10,7 @@ import {
   ensureMechanicHome,
 } from "../lib/paths.js";
 import { readSkillFrontmatter, slugify } from "../lib/skill.js";
+import { sanitizeMetadata } from "../lib/sanitize.js";
 
 type Origin = "user" | "project" | "external";
 
@@ -120,9 +121,9 @@ function scanScope(
     candidates.push({
       origin,
       pathOnDisk: full,
-      name: fm.name,
+      name: sanitizeMetadata(fm.name),
       proposedId: id,
-      description: fm.description,
+      description: fm.description ? sanitizeMetadata(fm.description) : undefined,
     });
     decisions.push({
       path: full,
@@ -162,9 +163,9 @@ function scanExternal(root: string, reg: Registry): ScanResult {
         candidates.push({
           origin: "external",
           pathOnDisk: dir,
-          name: fm.name,
+          name: sanitizeMetadata(fm.name),
           proposedId: id,
-          description: fm.description,
+          description: fm.description ? sanitizeMetadata(fm.description) : undefined,
         });
         decisions.push({
           path: dir,

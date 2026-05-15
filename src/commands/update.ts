@@ -3,7 +3,8 @@ import path from "node:path";
 import pc from "picocolors";
 import { loadRegistry, saveRegistry } from "../lib/registry.js";
 import { skillsStore, findProjectRoot } from "../lib/paths.js";
-import { gitPull, gitHeadSha } from "../lib/git.js";
+import { gitClone, gitPull, gitHeadSha } from "../lib/git.js";
+import { selectSkillFromClone } from "../lib/skill.js";
 import { loadLock, upsertLock } from "../lib/lock.js";
 
 export async function update(
@@ -31,9 +32,26 @@ export async function update(
     }
 
     if (s.source.type === "git") {
-      const dir = path.join(skillsStore(), sid);
-      gitPull(dir);
-      const ref = gitHeadSha(dir);
+      const store = path.join(skillsStore(), sid);
+      let ref: string;
+      if (s.source.subpath) {
+        // Skill lives at a subpath; re-clone and replace the store copy.
+        const tmp = path.join(skillsStore(), `.tmp-update-${sid}-${Date.now()}`);
+        try {
+          gitClone(s.source.url, tmp, { ref: s.source.ref });
+          const picked = selectSkillFromClone(tmp, {
+            subpath: s.source.subpath,
+          });
+          ref = gitHeadSha(tmp);
+          fs.rmSync(store, { recursive: true, force: true });
+          fs.cpSync(picked.dir, store, { recursive: true });
+        } finally {
+          fs.rmSync(tmp, { recursive: true, force: true });
+        }
+      } else {
+        gitPull(store);
+        ref = gitHeadSha(store);
+      }
       s.ref = ref;
       if (root && lockedIds.has(sid)) {
         upsertLock(root, { id: sid, source: s.source, ref });

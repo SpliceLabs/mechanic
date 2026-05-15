@@ -8,6 +8,7 @@ import {
 } from "../lib/paths.js";
 import { isOurSymlink } from "../lib/symlink.js";
 import { readSkillFrontmatter } from "../lib/skill.js";
+import { sanitizeMetadata } from "../lib/sanitize.js";
 
 export async function info(id: string): Promise<void> {
   const reg = loadRegistry();
@@ -23,9 +24,17 @@ export async function info(id: string): Promise<void> {
     description = readSkillFrontmatter(store).description;
   } catch {}
   console.log(pc.bold(id));
-  console.log(`  name:    ${s.name}`);
-  if (description) console.log(`  desc:    ${description}`);
-  console.log(`  source:  ${s.source.type} ${s.source.url}`);
+  console.log(`  name:    ${sanitizeMetadata(s.name)}`);
+  if (description) console.log(`  desc:    ${sanitizeMetadata(description)}`);
+  const sourceExtras = [
+    s.source.ref ? `branch ${s.source.ref}` : null,
+    s.source.subpath ? `subpath ${s.source.subpath}` : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  console.log(
+    `  source:  ${s.source.type} ${s.source.url}${sourceExtras ? pc.dim(` (${sourceExtras})`) : ""}`,
+  );
   console.log(`  ref:     ${s.ref ?? pc.dim("(local)")}`);
   console.log(`  store:   ${store}`);
   console.log(`  added:   ${s.installedAt}`);

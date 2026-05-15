@@ -4,43 +4,66 @@ import pc from "picocolors";
 import { input } from "@inquirer/prompts";
 import { skillsStore, ensureMechanicHome } from "../lib/paths.js";
 import { gitClone, gitHeadSha } from "../lib/git.js";
-import { readSkillFrontmatter, slugify } from "../lib/skill.js";
+import {
+  readSkillFrontmatter,
+  selectSkillFromClone,
+  slugify,
+} from "../lib/skill.js";
 import { loadRegistry, saveRegistry, type SkillSource } from "../lib/registry.js";
 import { extractSkillArchive, isSkillArchive } from "../lib/archive.js";
-
-function isGitUrl(s: string): boolean {
-  return /^(https?:\/\/|git@|ssh:\/\/|git:\/\/)/.test(s) || s.endsWith(".git");
-}
+import { sanitizeMetadata } from "../lib/sanitize.js";
+import { parseSource, type ParsedSource } from "../lib/source-parser.js";
 
 export async function add(source: string): Promise<void> {
   ensureMechanicHome();
   const registry = loadRegistry();
 
+  const parsed: ParsedSource = parseSource(source);
+
   let sourceMeta: SkillSource;
   let ref: string | null = null;
   let skillDir: string;
-  let tmpDir: string | null = null;
+  let cleanupDir: string | null = null;
 
-  if (isGitUrl(source)) {
-    tmpDir = path.join(skillsStore(), `.tmp-${Date.now()}`);
-    gitClone(source, tmpDir);
-    ref = gitHeadSha(tmpDir);
-    sourceMeta = { type: "git", url: source };
-    skillDir = tmpDir;
-  } else if (isSkillArchive(source)) {
-    const abs = path.resolve(source);
+  if (parsed.type === "local") {
+    const abs = parsed.localPath ?? parsed.url;
     if (!fs.existsSync(abs)) throw new Error(`Path not found: ${abs}`);
-    tmpDir = path.join(skillsStore(), `.tmp-${Date.now()}`);
-    extractSkillArchive(abs, tmpDir);
-    sourceMeta = { type: "archive", url: abs };
-    skillDir = tmpDir;
-  } else {
-    const abs = path.resolve(source);
-    if (!fs.existsSync(abs)) {
-      throw new Error(`Path not found: ${abs}`);
+    if (isSkillArchive(abs)) {
+      const tmp = path.join(skillsStore(), `.tmp-${Date.now()}`);
+      extractSkillArchive(abs, tmp);
+      cleanupDir = tmp;
+      sourceMeta = { type: "archive", url: abs };
+      skillDir = tmp;
+    } else {
+      sourceMeta = { type: "local", url: abs };
+      skillDir = abs;
     }
-    sourceMeta = { type: "local", url: abs };
-    skillDir = abs;
+  } else {
+    // github | gitlab | git → clone
+    const cloneDir = path.join(skillsStore(), `.tmp-${Date.now()}`);
+    cleanupDir = cloneDir;
+    try {
+      gitClone(parsed.url, cloneDir, { ref: parsed.ref });
+    } catch (err) {
+      if (cleanupDir && fs.existsSync(cleanupDir)) {
+        fs.rmSync(cleanupDir, { recursive: true, force: true });
+      }
+      throw err;
+    }
+    ref = gitHeadSha(cloneDir);
+
+    const picked = selectSkillFromClone(cloneDir, {
+      subpath: parsed.subpath,
+      skillFilter: parsed.skillFilter,
+    });
+    skillDir = picked.dir;
+
+    sourceMeta = {
+      type: "git",
+      url: parsed.url,
+      ...(parsed.ref ? { ref: parsed.ref } : {}),
+      ...(picked.subpath ? { subpath: picked.subpath } : {}),
+    };
   }
 
   const fm = readSkillFrontmatter(skillDir);
@@ -54,16 +77,29 @@ export async function add(source: string): Promise<void> {
     });
     id = slugify(alias);
     if (registry.skills[id]) {
-      if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
+      if (cleanupDir) fs.rmSync(cleanupDir, { recursive: true, force: true });
       throw new Error(`id '${id}' is also taken`);
     }
   }
 
   const finalStore = path.join(skillsStore(), id);
-  if (sourceMeta.type === "git" || sourceMeta.type === "archive") {
-    fs.renameSync(tmpDir!, finalStore);
-  } else {
+
+  if (sourceMeta.type === "local") {
+    // Live link to user's original directory.
     fs.symlinkSync(sourceMeta.url, finalStore);
+  } else if (sourceMeta.type === "archive") {
+    // Archive extract: rename whole extracted tmp dir.
+    fs.renameSync(cleanupDir!, finalStore);
+    cleanupDir = null;
+  } else if (sourceMeta.subpath) {
+    // git + subpath: store is just the skill subtree; update re-clones.
+    fs.cpSync(skillDir, finalStore, { recursive: true });
+    fs.rmSync(cleanupDir!, { recursive: true, force: true });
+    cleanupDir = null;
+  } else {
+    // git root skill: keep the full clone so `update` can `git pull`.
+    fs.renameSync(cleanupDir!, finalStore);
+    cleanupDir = null;
   }
 
   registry.skills[id] = {
@@ -74,5 +110,7 @@ export async function add(source: string): Promise<void> {
   };
   saveRegistry(registry);
 
-  console.log(`${pc.green("✓ added")} ${pc.bold(id)} ${pc.dim(`(${fm.name})`)}`);
+  console.log(
+    `${pc.green("✓ added")} ${pc.bold(id)} ${pc.dim(`(${sanitizeMetadata(fm.name)})`)}`,
+  );
 }
