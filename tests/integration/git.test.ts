@@ -43,7 +43,7 @@ describe("git-sourced skills", () => {
     sb = createSandbox();
     const repo = createBareSkillRepo(sb.base, "git-skill");
 
-    const out = run(["add", repo.remote]);
+    const out = run(["skill", "add", repo.remote]);
     expect(out.status, out.stderr).toBe(0);
     expect(out.stdout).toMatch(/added.*git-skill/);
 
@@ -58,13 +58,13 @@ describe("git-sourced skills", () => {
   it("update fast-forwards a git-sourced skill to the remote HEAD", () => {
     sb = createSandbox();
     const repo = createBareSkillRepo(sb.base, "evolve");
-    expect(run(["add", repo.remote]).status).toBe(0);
+    expect(run(["skill", "add", repo.remote]).status).toBe(0);
 
     const initialSha = readRegistry().skills["evolve"].ref;
     const newSha = repo.pushCommit("second commit");
     expect(newSha).not.toBe(initialSha);
 
-    const out = run(["update", "evolve"]);
+    const out = run(["skill", "update", "evolve"]);
     expect(out.status, out.stderr).toBe(0);
     expect(out.stdout).toMatch(/updated.*evolve/);
 

@@ -34,8 +34,8 @@ describe("CLI integration", () => {
     const { status, stdout } = run(["--help"]);
     expect(status).toBe(0);
     expect(stdout).toContain("mechanic");
-    expect(stdout).toContain("add");
-    expect(stdout).toContain("enable");
+    expect(stdout).toContain("skill");
+    expect(stdout).toContain("install");
   });
 
   it("round-trip: add → list → enable user → disable → remove", () => {
@@ -43,29 +43,29 @@ describe("CLI integration", () => {
     const skillDir = path.join(sb.base, "external-skill");
     writeSkillFixture(skillDir, "round-trip-skill");
 
-    const add = run(["add", skillDir]);
+    const add = run(["skill", "add", skillDir]);
     expect(add.status, add.stderr).toBe(0);
     expect(add.stdout).toMatch(/added.*round-trip-skill/);
 
-    const list1 = run(["list"]);
+    const list1 = run(["skill", "list"]);
     expect(list1.stdout).toContain("round-trip-skill");
     expect(list1.stdout).toMatch(/off\s+off/);
 
-    const enable = run(["enable", "round-trip-skill", "--scope", "user"]);
+    const enable = run(["skill", "enable", "round-trip-skill", "--scope", "user"]);
     expect(enable.status, enable.stderr).toBe(0);
     const link = path.join(sb.home, ".claude/skills/round-trip-skill");
     expect(fs.lstatSync(link).isSymbolicLink()).toBe(true);
 
-    const list2 = run(["list"]);
+    const list2 = run(["skill", "list"]);
     expect(list2.stdout).toMatch(/on\s+\s*off/);
 
-    const disable = run(["disable", "round-trip-skill", "--scope", "user"]);
+    const disable = run(["skill", "disable", "round-trip-skill", "--scope", "user"]);
     expect(disable.status, disable.stderr).toBe(0);
     expect(fs.existsSync(link)).toBe(false);
 
-    const remove = run(["remove", "round-trip-skill"]);
+    const remove = run(["skill", "remove", "round-trip-skill"]);
     expect(remove.status, remove.stderr).toBe(0);
-    const list3 = run(["list"]);
+    const list3 = run(["skill", "list"]);
     expect(list3.stdout).toContain("No skills registered");
   });
 
@@ -74,8 +74,8 @@ describe("CLI integration", () => {
     const skillDir = path.join(sb.base, "proj-skill");
     writeSkillFixture(skillDir, "proj-skill");
 
-    expect(run(["add", skillDir]).status).toBe(0);
-    const enable = run(["enable", "proj-skill", "--scope", "project"]);
+    expect(run(["skill", "add", skillDir]).status).toBe(0);
+    const enable = run(["skill", "enable", "proj-skill", "--scope", "project"]);
     expect(enable.status, enable.stderr).toBe(0);
 
     expect(fs.existsSync(path.join(sb.cwd, ".mechanic.json"))).toBe(true);
@@ -88,7 +88,7 @@ describe("CLI integration", () => {
       "proj-skill",
     );
 
-    const disable = run(["disable", "proj-skill", "--scope", "project"]);
+    const disable = run(["skill", "disable", "proj-skill", "--scope", "project"]);
     expect(disable.status).toBe(0);
     const lockAfter = JSON.parse(
       fs.readFileSync(path.join(sb.cwd, "mechanic.lock"), "utf8"),
@@ -98,7 +98,7 @@ describe("CLI integration", () => {
 
   it("exits non-zero on unknown skill id", () => {
     sb = createSandbox();
-    const { status, stderr } = run(["info", "missing-skill"]);
+    const { status, stderr } = run(["skill", "info", "missing-skill"]);
     expect(status).not.toBe(0);
     expect(stderr + "").toMatch(/missing-skill|Unknown/);
   });
@@ -107,8 +107,8 @@ describe("CLI integration", () => {
     sb = createSandbox();
     const skillDir = path.join(sb.base, "info-skill");
     writeSkillFixture(skillDir, "info-skill", { description: "documented" });
-    run(["add", skillDir]);
-    const { status, stdout } = run(["info", "info-skill"]);
+    run(["skill", "add", skillDir]);
+    const { status, stdout } = run(["skill", "info", "info-skill"]);
     expect(status).toBe(0);
     expect(stdout).toContain("info-skill");
     expect(stdout).toContain("local");

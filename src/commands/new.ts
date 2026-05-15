@@ -54,5 +54,7 @@ export async function newSkill(name: string): Promise<void> {
   console.log(
     `${pc.green("✓ scaffolded")} ${pc.bold(slug)} ${pc.dim(`in ${dir}`)}`,
   );
-  console.log(pc.dim(`Edit ${path.join(dir, "SKILL.md")} then run \`mechanic add ${dir}\`.`));
+  console.log(
+    pc.dim(`Edit ${path.join(dir, "SKILL.md")} then run \`mechanic skill add ${dir}\`.`),
+  );
 }

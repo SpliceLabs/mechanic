@@ -16,36 +16,36 @@ Requires Node 18+ and `git` on `PATH`.
 
 ```sh
 # register a skill from GitHub
-mechanic add https://github.com/some-org/cool-skill.git
+mechanic skill add https://github.com/some-org/cool-skill.git
 
 # shorthand: owner/repo
-mechanic add some-org/cool-skill
+mechanic skill add some-org/cool-skill
 
 # a skill inside a monorepo (subpath, branch, or @name filter)
-mechanic add anthropics/skills/skills/canvas-design
-mechanic add anthropics/skills@canvas-design
-mechanic add some-org/cool-skill#feature-branch
+mechanic skill add anthropics/skills/skills/canvas-design
+mechanic skill add anthropics/skills@canvas-design
+mechanic skill add some-org/cool-skill#feature-branch
 
 # or from GitLab
-mechanic add gitlab:group/repo
-mechanic add https://gitlab.com/group/subgroup/repo/-/tree/main/path
+mechanic skill add gitlab:group/repo
+mechanic skill add https://gitlab.com/group/subgroup/repo/-/tree/main/path
 
 # or from a local directory you're authoring
-mechanic add ./my-skill
+mechanic skill add ./my-skill
 
 # or from a packaged .skill archive (zip)
-mechanic add ./cool-skill.skill
+mechanic skill add ./cool-skill.skill
 
 # list what's known
-mechanic list
+mechanic skill list
 
 # enable in your user scope (~/.claude/skills/)
-mechanic enable cool-skill --scope user
+mechanic skill enable cool-skill --scope user
 
 # inside a project, scope defaults to the project
 cd my-repo
 mechanic init
-mechanic enable cool-skill              # writes mechanic.lock + .gitignore
+mechanic skill enable cool-skill              # writes mechanic.lock + .gitignore
 
 # teammate clones the repo and restores the same skills
 mechanic install
@@ -70,21 +70,31 @@ Activation is a symlink from the scope directory back to the store. Deactivation
 
 ## Commands
 
+Skill operations live under `mechanic skill <verb>`. Project-level commands (`init`, `install`, `doctor`) are top-level. A `mechanic hooks <verb>` sub-program with the same shape is scaffolded but not yet implemented.
+
+### `mechanic skill …`
+
 | Command | Description |
 | --- | --- |
-| `mechanic add <source>` | Register a skill. Sources: git URL, GitHub shorthand (`owner/repo`, with optional `/subpath`, `@skill-name`, or `#ref`), GitLab URL or `gitlab:owner/repo`, local path, or a `.skill` zip archive. |
-| `mechanic find <source>` | Browse a repo (remote or local) for `SKILL.md` files and bulk-register the ones you pick. Useful for monorepos that ship many skills. |
-| `mechanic list` | Show every registered skill and whether it's active in each scope. |
-| `mechanic info <id>` | Print details for one skill: source, ref, store path, active scopes. |
-| `mechanic enable <id> [--scope user\|project] [--replace]` | Activate a skill in a scope. Defaults to project if you're inside one. `--replace` removes a real directory at the scope path before installing the symlink. |
-| `mechanic disable <id> [--scope ...]` | Deactivate a skill in a scope. |
-| `mechanic remove <id>` | Deactivate everywhere, delete the store entry, drop the registry record. |
-| `mechanic update [id] [--all]` | Pull updates for git-sourced skills. For local sources held as a copy in the store, re-copies from the original path so edits at the source land in the store. `.skill`-sourced skills are frozen and skipped. |
-| `mechanic scan [dir] [--verbose]` | Find unmanaged skills and **copy** them into the store. Source trees are never mutated. Without args, walks user + project scope `.claude/skills/` directories. With a path, recursively walks that directory (depth 5). `--verbose` logs every path inspected and why it was kept or skipped. Adoption only registers + copies — to activate an adopted skill in a scope, run `mechanic enable <id> [--scope ...]` (use `--replace` if the scope path is still occupied by the original real directory). Interactive checklist supports type-to-search, `esc` to quit (or to clear filter while searching), `enter` to confirm. |
+| `mechanic skill add <source>` | Register a skill. Sources: git URL, GitHub shorthand (`owner/repo`, with optional `/subpath`, `@skill-name`, or `#ref`), GitLab URL or `gitlab:owner/repo`, local path, or a `.skill` zip archive. |
+| `mechanic skill find <source>` | Browse a repo (remote or local) for `SKILL.md` files and bulk-register the ones you pick. Useful for monorepos that ship many skills. |
+| `mechanic skill list` (`ls`) | Show every registered skill and whether it's active in each scope. |
+| `mechanic skill info <id>` | Print details for one skill: source, ref, store path, active scopes. |
+| `mechanic skill enable <id> [--scope user\|project] [--replace]` | Activate a skill in a scope. Defaults to project if you're inside one. `--replace` removes a real directory at the scope path before installing the symlink. |
+| `mechanic skill disable <id> [--scope ...]` | Deactivate a skill in a scope. |
+| `mechanic skill remove <id>` (`rm`) | Deactivate everywhere, delete the store entry, drop the registry record. |
+| `mechanic skill update [id] [--all]` | Pull updates for git-sourced skills. For local sources held as a copy in the store, re-copies from the original path so edits at the source land in the store. `.skill`-sourced skills are frozen and skipped. |
+| `mechanic skill scan [dir] [--verbose]` | Find unmanaged skills and **copy** them into the store. Source trees are never mutated. Without args, walks user + project scope `.claude/skills/` directories. With a path, recursively walks that directory (depth 5). `--verbose` logs every path inspected and why it was kept or skipped. Adoption only registers + copies — to activate an adopted skill in a scope, run `mechanic skill enable <id> [--scope ...]` (use `--replace` if the scope path is still occupied by the original real directory). Interactive checklist supports type-to-search, `esc` to quit (or to clear filter while searching), `enter` to confirm. |
+| `mechanic skill new <name>` | Scaffold a `SKILL.md` template in `./<name>/` for authoring a new skill. |
+
+### Top-level
+
+| Command | Description |
+| --- | --- |
 | `mechanic init` | Mark the current directory as a mechanic project (`.mechanic.json` + `.gitignore`). |
-| `mechanic new <name>` | Scaffold a `SKILL.md` template in `./<name>/` for authoring a new skill. |
 | `mechanic install` | Apply `mechanic.lock`: clone or symlink each pinned skill, register it, and enable it at project scope. |
-| `mechanic doctor [--fix]` | Diagnose broken symlinks, orphan store directories, and stale registry entries. `--fix` cleans them up. |
+| `mechanic doctor [--fix]` | Diagnose broken symlinks, orphan store directories, stale `.tmp-*` clone leftovers, and stale registry entries. `--fix` cleans them up. |
+| `mechanic hooks <verb>` | Hook configuration management (scaffolded; not yet implemented). |
 
 ## Project layout when you adopt mechanic
 
