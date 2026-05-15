@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import pc from "picocolors";
 import { input } from "@inquirer/prompts";
-import { skillsStore, ensureMechanicHome } from "../lib/paths.js";
+import { skillsStore, ensureMechanicHome, tmpStorePath } from "../lib/paths.js";
 import { gitClone, gitHeadSha } from "../lib/git.js";
 import {
   readSkillFrontmatter,
@@ -29,7 +29,7 @@ export async function add(source: string): Promise<void> {
     const abs = parsed.localPath ?? parsed.url;
     if (!fs.existsSync(abs)) throw new Error(`Path not found: ${abs}`);
     if (isSkillArchive(abs)) {
-      const tmp = path.join(skillsStore(), `.tmp-${Date.now()}`);
+      const tmp = tmpStorePath("archive");
       extractSkillArchive(abs, tmp);
       cleanupDir = tmp;
       sourceMeta = { type: "archive", url: abs };
@@ -40,7 +40,7 @@ export async function add(source: string): Promise<void> {
     }
   } else {
     // github | gitlab | git → clone
-    const cloneDir = path.join(skillsStore(), `.tmp-${Date.now()}`);
+    const cloneDir = tmpStorePath("clone");
     cleanupDir = cloneDir;
     try {
       gitClone(parsed.url, cloneDir, { ref: parsed.ref });

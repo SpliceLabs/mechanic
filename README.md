@@ -73,6 +73,7 @@ Activation is a symlink from the scope directory back to the store. Deactivation
 | Command | Description |
 | --- | --- |
 | `mechanic add <source>` | Register a skill. Sources: git URL, GitHub shorthand (`owner/repo`, with optional `/subpath`, `@skill-name`, or `#ref`), GitLab URL or `gitlab:owner/repo`, local path, or a `.skill` zip archive. |
+| `mechanic find <source>` | Browse a repo (remote or local) for `SKILL.md` files and bulk-register the ones you pick. Useful for monorepos that ship many skills. |
 | `mechanic list` | Show every registered skill and whether it's active in each scope. |
 | `mechanic info <id>` | Print details for one skill: source, ref, store path, active scopes. |
 | `mechanic enable <id> [--scope user\|project] [--replace]` | Activate a skill in a scope. Defaults to project if you're inside one. `--replace` removes a real directory at the scope path before installing the symlink. |
@@ -81,6 +82,7 @@ Activation is a symlink from the scope directory back to the store. Deactivation
 | `mechanic update [id] [--all]` | Pull updates for git-sourced skills. For local sources held as a copy in the store, re-copies from the original path so edits at the source land in the store. `.skill`-sourced skills are frozen and skipped. |
 | `mechanic scan [dir] [--verbose]` | Find unmanaged skills and **copy** them into the store. Source trees are never mutated. Without args, walks user + project scope `.claude/skills/` directories. With a path, recursively walks that directory (depth 5). `--verbose` logs every path inspected and why it was kept or skipped. Adoption only registers + copies — to activate an adopted skill in a scope, run `mechanic enable <id> [--scope ...]` (use `--replace` if the scope path is still occupied by the original real directory). Interactive checklist supports type-to-search, `esc` to quit (or to clear filter while searching), `enter` to confirm. |
 | `mechanic init` | Mark the current directory as a mechanic project (`.mechanic.json` + `.gitignore`). |
+| `mechanic new <name>` | Scaffold a `SKILL.md` template in `./<name>/` for authoring a new skill. |
 | `mechanic install` | Apply `mechanic.lock`: clone or symlink each pinned skill, register it, and enable it at project scope. |
 | `mechanic doctor [--fix]` | Diagnose broken symlinks, orphan store directories, and stale registry entries. `--fix` cleans them up. |
 

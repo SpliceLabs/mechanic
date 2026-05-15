@@ -16,7 +16,8 @@ type IssueKind =
   | "broken-symlink"
   | "orphan-symlink"
   | "missing-store"
-  | "orphan-store";
+  | "orphan-store"
+  | "stale-tmp";
 
 interface Issue {
   kind: IssueKind;
@@ -24,6 +25,8 @@ interface Issue {
   target: string; // path to remove (symlink/dir) or registry id
   detail: string;
 }
+
+const STALE_TMP_AGE_MS = 60 * 60 * 1000; // 1 hour
 
 function scanLinks(
   scopeName: "user" | "project",
@@ -85,13 +88,31 @@ export async function doctor(opts: { fix?: boolean }): Promise<void> {
   }
 
   if (fs.existsSync(skillsStore())) {
+    const now = Date.now();
     for (const entry of fs.readdirSync(skillsStore())) {
+      const full = path.join(skillsStore(), entry);
+      if (entry.startsWith(".tmp-")) {
+        let mtime = 0;
+        try {
+          mtime = fs.lstatSync(full).mtimeMs;
+        } catch {
+          continue;
+        }
+        if (now - mtime < STALE_TMP_AGE_MS) continue;
+        issues.push({
+          kind: "stale-tmp",
+          scope: "store",
+          target: full,
+          detail: `leftover tmp dir (mtime ${new Date(mtime).toISOString()})`,
+        });
+        continue;
+      }
       if (entry.startsWith(".")) continue;
       if (!reg.skills[entry]) {
         issues.push({
           kind: "orphan-store",
           scope: "store",
-          target: path.join(skillsStore(), entry),
+          target: full,
           detail: `store dir '${entry}' not in registry`,
         });
       }
@@ -141,6 +162,10 @@ export async function doctor(opts: { fix?: boolean }): Promise<void> {
         fixed++;
         break;
       }
+      case "stale-tmp":
+        fs.rmSync(i.target, { recursive: true, force: true });
+        fixed++;
+        break;
     }
   }
   saveRegistry(reg);

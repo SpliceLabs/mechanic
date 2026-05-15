@@ -86,6 +86,21 @@ describe("doctor", () => {
     expect(loadRegistry().skills["dryrun"]).toBeDefined();
   });
 
+  it("cleans up stale .tmp-* clone leftovers older than 1h with --fix", async () => {
+    sb = createSandbox();
+    ensureMechanicHome();
+    const fresh = path.join(skillsStore(), ".tmp-clone-1234-9999999999-aaaa");
+    const stale = path.join(skillsStore(), ".tmp-clone-1234-1111111111-bbbb");
+    fs.mkdirSync(fresh, { recursive: true });
+    fs.mkdirSync(stale, { recursive: true });
+    const twoHoursAgo = (Date.now() - 2 * 60 * 60 * 1000) / 1000;
+    fs.utimesSync(stale, twoHoursAgo, twoHoursAgo);
+
+    await doctor({ fix: true });
+    expect(fs.existsSync(stale)).toBe(false);
+    expect(fs.existsSync(fresh)).toBe(true);
+  });
+
   it("ignores foreign (non-mechanic) symlinks in scope dirs", async () => {
     sb = createSandbox();
     const foreignTarget = path.join(sb.base, "elsewhere");

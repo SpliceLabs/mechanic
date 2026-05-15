@@ -13,6 +13,8 @@ import { scan } from "./commands/scan.js";
 import { init } from "./commands/init.js";
 import { install } from "./commands/install.js";
 import { doctor } from "./commands/doctor.js";
+import { newSkill } from "./commands/new.js";
+import { find } from "./commands/find.js";
 
 const require = createRequire(import.meta.url);
 const pkg = require("../package.json") as { version: string };
@@ -74,6 +76,14 @@ program
   );
 
 program
+  .command("find")
+  .description(
+    "Browse a repo (remote or local) for SKILL.md files and pick which to register",
+  )
+  .argument("<source>", "git URL, GitHub shorthand, or local path")
+  .action(find);
+
+program
   .command("scan")
   .description(
     "Find unmanaged skills and adopt them. Without args scans user + project " +
@@ -92,6 +102,12 @@ program
   .command("init")
   .description("Mark current directory as a mechanic project")
   .action(init);
+
+program
+  .command("new")
+  .description("Scaffold a SKILL.md template in ./<name>/")
+  .argument("<name>", "skill name (kebab-case)")
+  .action(newSkill);
 
 program
   .command("install")

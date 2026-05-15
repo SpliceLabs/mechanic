@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import crypto from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 
@@ -29,6 +30,15 @@ export function userSkills(): string {
 
 export function ensureMechanicHome(): void {
   fs.mkdirSync(skillsStore(), { recursive: true });
+}
+
+/**
+ * Build a tmp dir path inside `skillsStore()` that is unique across parallel
+ * mechanic invocations. Caller is responsible for cleanup on success/failure.
+ */
+export function tmpStorePath(label = "tmp"): string {
+  const rand = crypto.randomBytes(4).toString("hex");
+  return path.join(skillsStore(), `.tmp-${label}-${process.pid}-${Date.now()}-${rand}`);
 }
 
 export function findProjectRoot(from: string = process.cwd()): string | null {

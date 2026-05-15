@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import pc from "picocolors";
 import { loadRegistry, saveRegistry } from "../lib/registry.js";
-import { skillsStore, findProjectRoot } from "../lib/paths.js";
+import { skillsStore, findProjectRoot, tmpStorePath } from "../lib/paths.js";
 import { gitClone, gitPull, gitHeadSha } from "../lib/git.js";
 import { selectSkillFromClone } from "../lib/skill.js";
 import { loadLock, upsertLock } from "../lib/lock.js";
@@ -36,7 +36,7 @@ export async function update(
       let ref: string;
       if (s.source.subpath) {
         // Skill lives at a subpath; re-clone and replace the store copy.
-        const tmp = path.join(skillsStore(), `.tmp-update-${sid}-${Date.now()}`);
+        const tmp = tmpStorePath(`update-${sid}`);
         try {
           gitClone(s.source.url, tmp, { ref: s.source.ref });
           const picked = selectSkillFromClone(tmp, {

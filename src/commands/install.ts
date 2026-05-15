@@ -5,6 +5,7 @@ import {
   findProjectRoot,
   skillsStore,
   ensureMechanicHome,
+  tmpStorePath,
 } from "../lib/paths.js";
 import { loadLock } from "../lib/lock.js";
 import {
@@ -43,7 +44,7 @@ export async function install(): Promise<void> {
         let resolvedRef: string | null = entry.ref ?? null;
         if (!fs.existsSync(store)) {
           if (entry.source.subpath) {
-            const tmp = path.join(skillsStore(), `.tmp-install-${entry.id}-${Date.now()}`);
+            const tmp = tmpStorePath(`install-${entry.id}`);
             try {
               gitClone(entry.source.url, tmp, {
                 shallow: !entry.ref,
