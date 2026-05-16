@@ -37,16 +37,23 @@ skill
   .argument("<source>", "git URL or local path")
   .action(add);
 
+const AGENT_DIR_OPT = [
+  "--agent-dir <path>",
+  "Relative dir under $HOME and the project root where skills live (default: .claude/skills, or .mechanic.json `agentDir`)",
+] as const;
+
 skill
   .command("list")
   .alias("ls")
   .description("List registered skills and active scopes")
+  .option(...AGENT_DIR_OPT)
   .action(list);
 
 skill
   .command("info")
   .description("Show details for a registered skill")
   .argument("<id>")
+  .option(...AGENT_DIR_OPT)
   .action(info);
 
 skill
@@ -55,6 +62,7 @@ skill
   .argument("<id>")
   .option("-s, --scope <scope>", "user | project")
   .option("--replace", "If a real directory occupies the scope path, remove it first")
+  .option(...AGENT_DIR_OPT)
   .action(enable);
 
 skill
@@ -62,6 +70,7 @@ skill
   .description("Deactivate a skill in a scope")
   .argument("<id>")
   .option("-s, --scope <scope>", "user | project")
+  .option(...AGENT_DIR_OPT)
   .action(disable);
 
 skill
@@ -69,6 +78,7 @@ skill
   .alias("rm")
   .description("Unregister and delete a skill")
   .argument("<id>")
+  .option(...AGENT_DIR_OPT)
   .action(remove);
 
 skill
@@ -99,8 +109,12 @@ skill
     "directory to scan instead of user/project scopes (read-only adoption)",
   )
   .option("-v, --verbose", "Log every path inspected and why it was kept or skipped")
-  .action((dir: string | undefined, opts: { verbose?: boolean }) =>
-    scan({ dir, verbose: opts.verbose }),
+  .option(...AGENT_DIR_OPT)
+  .action(
+    (
+      dir: string | undefined,
+      opts: { verbose?: boolean; agentDir?: string },
+    ) => scan({ dir, verbose: opts.verbose, agentDir: opts.agentDir }),
   );
 
 skill
@@ -196,17 +210,23 @@ hook
 program
   .command("init")
   .description("Mark current directory as a mechanic project")
+  .option(
+    "--agent-dir <path>",
+    "Relative skills dir to persist in .mechanic.json (default: .claude/skills)",
+  )
   .action(init);
 
 program
   .command("install")
   .description("Apply mechanic.lock — register and enable each pinned skill")
+  .option(...AGENT_DIR_OPT)
   .action(install);
 
 program
   .command("doctor")
   .description("Diagnose broken symlinks, orphan store dirs, stale registry")
   .option("--fix", "Remove broken/orphan artifacts and stale registry entries")
+  .option(...AGENT_DIR_OPT)
   .action(doctor);
 
 program.parseAsync(process.argv).catch((err: unknown) => {

@@ -3,7 +3,7 @@ import pc from "picocolors";
 import { loadRegistry } from "../lib/registry.js";
 import { skillsStore, findProjectRoot } from "../lib/paths.js";
 import {
-  resolveScopeDir,
+  scopeSkillsDir,
   defaultScope,
   parseScope,
   type Scope,
@@ -13,15 +13,15 @@ import { removeLock } from "../lib/lock.js";
 
 export async function disable(
   id: string,
-  opts: { scope?: string },
+  opts: { scope?: string; agentDir?: string },
 ): Promise<void> {
   const reg = loadRegistry();
   const s = reg.skills[id];
   if (!s) throw new Error(`Unknown skill: ${id}`);
 
   const scope: Scope = parseScope(opts.scope) ?? defaultScope();
-  const scopeDir = resolveScopeDir(scope);
-  const link = path.join(scopeDir, "skills", s.name);
+  const skillsDir = scopeSkillsDir(scope, { agentDir: opts.agentDir });
+  const link = path.join(skillsDir, s.name);
   const ok = safeUnlink(link, path.join(skillsStore(), id));
 
   if (!ok) {

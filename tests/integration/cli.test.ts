@@ -103,6 +103,47 @@ describe("CLI integration", () => {
     expect(stderr + "").toMatch(/missing-skill|Unknown/);
   });
 
+  it("agent-dir: init --agent-dir persists, enable uses the override path", () => {
+    sb = createSandbox();
+    const skillDir = path.join(sb.base, "agent-skill");
+    writeSkillFixture(skillDir, "agent-skill");
+
+    expect(run(["init", "--agent-dir", ".cursor/skills"]).status).toBe(0);
+    const marker = JSON.parse(
+      fs.readFileSync(path.join(sb.cwd, ".mechanic.json"), "utf8"),
+    );
+    expect(marker.agentDir).toBe(".cursor/skills");
+
+    expect(run(["skill", "add", skillDir]).status).toBe(0);
+
+    // user scope uses the same override → ~/.cursor/skills
+    const enableUser = run([
+      "skill",
+      "enable",
+      "agent-skill",
+      "--scope",
+      "user",
+      "--agent-dir",
+      ".cursor/skills",
+    ]);
+    expect(enableUser.status, enableUser.stderr).toBe(0);
+    expect(
+      fs.lstatSync(path.join(sb.home, ".cursor/skills/agent-skill")).isSymbolicLink(),
+    ).toBe(true);
+
+    // project scope picks up the marker's agentDir with no flag
+    const enableProj = run(["skill", "enable", "agent-skill", "--scope", "project"]);
+    expect(enableProj.status, enableProj.stderr).toBe(0);
+    expect(
+      fs.lstatSync(path.join(sb.cwd, ".cursor/skills/agent-skill")).isSymbolicLink(),
+    ).toBe(true);
+
+    // .gitignore was written with the custom dir
+    expect(
+      fs.readFileSync(path.join(sb.cwd, ".gitignore"), "utf8"),
+    ).toContain(".cursor/skills/");
+  });
+
   it("info reports a registered skill", () => {
     sb = createSandbox();
     const skillDir = path.join(sb.base, "info-skill");

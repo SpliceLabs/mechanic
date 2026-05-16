@@ -6,7 +6,9 @@ import {
   skillsStore,
   ensureMechanicHome,
   tmpStorePath,
+  resolveAgentDir,
 } from "../lib/paths.js";
+import { scopeSkillsDir } from "../lib/scope.js";
 import { loadLock } from "../lib/lock.js";
 import {
   loadRegistry,
@@ -18,7 +20,9 @@ import { readSkillFrontmatter, selectSkillFromClone } from "../lib/skill.js";
 import { makeSymlink } from "../lib/symlink.js";
 import { ensureGitignore } from "../lib/gitignore.js";
 
-export async function install(): Promise<void> {
+export async function install(
+  opts: { agentDir?: string } = {},
+): Promise<void> {
   const root = findProjectRoot();
   if (!root) {
     throw new Error(
@@ -26,6 +30,11 @@ export async function install(): Promise<void> {
     );
   }
   ensureMechanicHome();
+  const projectSkillsDir = scopeSkillsDir("project", { agentDir: opts.agentDir });
+  const agentDir = resolveAgentDir({
+    override: opts.agentDir,
+    projectRoot: root,
+  });
 
   const lock = loadLock(root);
   if (lock.skills.length === 0) {
@@ -98,7 +107,7 @@ export async function install(): Promise<void> {
       reg.skills[entry.id] = regEntry;
     }
 
-    const link = path.join(root, ".claude/skills", regEntry.name);
+    const link = path.join(projectSkillsDir, regEntry.name);
     makeSymlink(store, link);
     console.log(
       `${pc.green("✓ installed")} ${pc.bold(entry.id)} ${pc.dim(`(${regEntry.name})`)}`,
@@ -106,5 +115,5 @@ export async function install(): Promise<void> {
   }
 
   saveRegistry(reg);
-  ensureGitignore(root);
+  ensureGitignore(root, agentDir);
 }

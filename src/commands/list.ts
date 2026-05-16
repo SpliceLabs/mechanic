@@ -1,30 +1,30 @@
 import path from "node:path";
 import pc from "picocolors";
 import { loadRegistry } from "../lib/registry.js";
-import {
-  skillsStore,
-  userClaude,
-  findProjectRoot,
-} from "../lib/paths.js";
+import { skillsStore, findProjectRoot } from "../lib/paths.js";
+import { scopeSkillsDir } from "../lib/scope.js";
 import { isOurSymlink } from "../lib/symlink.js";
 import { readSkillFrontmatter } from "../lib/skill.js";
 import { sanitizeMetadata } from "../lib/sanitize.js";
 
-function activeIn(scopeDir: string, id: string, name: string): boolean {
-  const link = path.join(scopeDir, "skills", name);
+function activeIn(skillsDir: string, id: string, name: string): boolean {
+  const link = path.join(skillsDir, name);
   return isOurSymlink(link, path.join(skillsStore(), id));
 }
 
-export async function list(): Promise<void> {
+export async function list(opts: { agentDir?: string } = {}): Promise<void> {
   const reg = loadRegistry();
   const ids = Object.keys(reg.skills).sort();
   if (ids.length === 0) {
-    console.log(pc.dim("No skills registered. Try `mechanic add <source>`."));
+    console.log(pc.dim("No skills registered. Try `mechanic skill add <source>`."));
     return;
   }
 
+  const userDir = scopeSkillsDir("user", { agentDir: opts.agentDir });
   const projectRoot = findProjectRoot();
-  const projectClaude = projectRoot ? path.join(projectRoot, ".claude") : null;
+  const projectDir = projectRoot
+    ? scopeSkillsDir("project", { agentDir: opts.agentDir })
+    : null;
 
   const rows = ids.map((id) => {
     const s = reg.skills[id];
@@ -38,8 +38,8 @@ export async function list(): Promise<void> {
       id,
       name: sanitizeMetadata(s.name),
       src: s.source.type,
-      user: activeIn(userClaude(), id, s.name),
-      proj: projectClaude ? activeIn(projectClaude, id, s.name) : false,
+      user: activeIn(userDir, id, s.name),
+      proj: projectDir ? activeIn(projectDir, id, s.name) : false,
       description: description ? sanitizeMetadata(description) : "",
     };
   });

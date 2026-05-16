@@ -5,10 +5,10 @@ import { skillPicker } from "../lib/skill-picker.js";
 import { loadRegistry, saveRegistry, type Registry } from "../lib/registry.js";
 import {
   skillsStore,
-  userClaude,
   findProjectRoot,
   ensureMechanicHome,
 } from "../lib/paths.js";
+import { scopeSkillsDir } from "../lib/scope.js";
 import { readSkillFrontmatter, slugify } from "../lib/skill.js";
 import { sanitizeMetadata } from "../lib/sanitize.js";
 
@@ -57,10 +57,9 @@ const EXTERNAL_MAX_DEPTH = 5;
 
 function scanScope(
   origin: "user" | "project",
-  scopeDir: string,
+  skillsDir: string,
   reg: Registry,
 ): ScanResult {
-  const skillsDir = path.join(scopeDir, "skills");
   if (!fs.existsSync(skillsDir)) {
     return {
       candidates: [],
@@ -223,7 +222,7 @@ function logVerbose(label: string, header: string, r: ScanResult): void {
 }
 
 export async function scan(
-  opts: { dir?: string; verbose?: boolean } = {},
+  opts: { dir?: string; verbose?: boolean; agentDir?: string } = {},
 ): Promise<void> {
   ensureMechanicHome();
   const reg = loadRegistry();
@@ -239,17 +238,19 @@ export async function scan(
       result: scanExternal(abs, reg),
     });
   } else {
+    const userDir = scopeSkillsDir("user", { agentDir: opts.agentDir });
     results.push({
       label: "user",
-      header: path.join(userClaude(), "skills"),
-      result: scanScope("user", userClaude(), reg),
+      header: userDir,
+      result: scanScope("user", userDir, reg),
     });
     const root = findProjectRoot();
     if (root) {
+      const projectDir = scopeSkillsDir("project", { agentDir: opts.agentDir });
       results.push({
         label: "project",
-        header: path.join(root, ".claude", "skills"),
-        result: scanScope("project", path.join(root, ".claude"), reg),
+        header: projectDir,
+        result: scanScope("project", projectDir, reg),
       });
     } else if (opts.verbose) {
       console.log(pc.dim("[project] not inside a mechanic project — skipped"));

@@ -1,16 +1,16 @@
 import path from "node:path";
 import pc from "picocolors";
 import { loadRegistry } from "../lib/registry.js";
-import {
-  skillsStore,
-  userClaude,
-  findProjectRoot,
-} from "../lib/paths.js";
+import { skillsStore, findProjectRoot } from "../lib/paths.js";
+import { scopeSkillsDir } from "../lib/scope.js";
 import { isOurSymlink } from "../lib/symlink.js";
 import { readSkillFrontmatter } from "../lib/skill.js";
 import { sanitizeMetadata } from "../lib/sanitize.js";
 
-export async function info(id: string): Promise<void> {
+export async function info(
+  id: string,
+  opts: { agentDir?: string } = {},
+): Promise<void> {
   const reg = loadRegistry();
   const s = reg.skills[id];
   if (!s) {
@@ -40,12 +40,16 @@ export async function info(id: string): Promise<void> {
   console.log(`  added:   ${s.installedAt}`);
 
   const active: string[] = [];
-  if (isOurSymlink(path.join(userClaude(), "skills", s.name), store)) {
+  const userDir = scopeSkillsDir("user", { agentDir: opts.agentDir });
+  if (isOurSymlink(path.join(userDir, s.name), store)) {
     active.push("user");
   }
   const root = findProjectRoot();
-  if (root && isOurSymlink(path.join(root, ".claude/skills", s.name), store)) {
-    active.push(`project (${root})`);
+  if (root) {
+    const projectDir = scopeSkillsDir("project", { agentDir: opts.agentDir });
+    if (isOurSymlink(path.join(projectDir, s.name), store)) {
+      active.push(`project (${root})`);
+    }
   }
   console.log(`  active:  ${active.length ? active.join(", ") : pc.dim("(none)")}`);
 }

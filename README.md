@@ -68,6 +68,8 @@ Activation is a symlink from the scope directory back to the store. Deactivation
 
 **Lock file.** `mechanic.lock` in a project root records every skill enabled at project scope, with the source URL and (for git sources) the commit SHA. `mechanic install` rebuilds the project's `.claude/skills/` from the lock.
 
+**Agent dir.** The relative skills directory mechanic writes symlinks into. Defaults to `.claude/skills`; both scopes derive from it (`~/.claude/skills` for user, `<project>/.claude/skills` for project). Override per-project with `mechanic init --agent-dir .cursor/skills` (persisted in `.mechanic.json` as `agentDir`) or per-invocation with `--agent-dir <path>` on any scope-touching command. Useful for non-Claude-Code agents like Cursor (`.cursor/skills`) or any agent that picks up skills from a different directory.
+
 ## Commands
 
 Skill operations live under `mechanic skill <verb>`. Project-level commands (`init`, `install`, `doctor`) are top-level. A `mechanic hooks <verb>` sub-program with the same shape is scaffolded but not yet implemented.

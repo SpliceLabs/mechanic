@@ -6,11 +6,8 @@ import {
   loadRegistry,
   saveRegistry,
 } from "../../src/lib/registry.js";
-import {
-  skillsStore,
-  userClaude,
-  ensureMechanicHome,
-} from "../../src/lib/paths.js";
+import { skillsStore, ensureMechanicHome } from "../../src/lib/paths.js";
+import { scopeSkillsDir } from "../../src/lib/scope.js";
 import {
   createSandbox,
   type Sandbox,
@@ -34,10 +31,9 @@ function seedRegistryEntry(id: string, name: string): string {
   return store;
 }
 
-function symlinkInScope(scopeDir: string, name: string, target: string): string {
-  const dir = path.join(scopeDir, "skills");
-  fs.mkdirSync(dir, { recursive: true });
-  const link = path.join(dir, name);
+function symlinkInScope(skillsDir: string, name: string, target: string): string {
+  fs.mkdirSync(skillsDir, { recursive: true });
+  const link = path.join(skillsDir, name);
   fs.symlinkSync(target, link);
   return link;
 }
@@ -46,14 +42,14 @@ describe("doctor", () => {
   it("reports healthy when registry, store and links agree", async () => {
     sb = createSandbox();
     const store = seedRegistryEntry("clean", "clean");
-    symlinkInScope(userClaude(), "clean", store);
+    symlinkInScope(scopeSkillsDir("user"), "clean", store);
     await expect(doctor({})).resolves.not.toThrow();
   });
 
   it("detects a broken symlink (target gone) and fixes it", async () => {
     sb = createSandbox();
     const store = seedRegistryEntry("vanish", "vanish");
-    const link = symlinkInScope(userClaude(), "vanish", store);
+    const link = symlinkInScope(scopeSkillsDir("user"), "vanish", store);
     fs.rmSync(store, { recursive: true, force: true });
 
     await doctor({ fix: true });
@@ -67,7 +63,7 @@ describe("doctor", () => {
     ensureMechanicHome();
     const orphanStore = path.join(skillsStore(), "wild");
     fs.mkdirSync(orphanStore, { recursive: true });
-    const link = symlinkInScope(userClaude(), "wild", orphanStore);
+    const link = symlinkInScope(scopeSkillsDir("user"), "wild", orphanStore);
 
     await doctor({ fix: true });
     // both the symlink and orphan store dir get cleaned
@@ -78,7 +74,7 @@ describe("doctor", () => {
   it("does not modify state without --fix", async () => {
     sb = createSandbox();
     const store = seedRegistryEntry("dryrun", "dryrun");
-    const link = symlinkInScope(userClaude(), "dryrun", store);
+    const link = symlinkInScope(scopeSkillsDir("user"), "dryrun", store);
     fs.rmSync(store, { recursive: true, force: true });
 
     await doctor({});
@@ -105,7 +101,7 @@ describe("doctor", () => {
     sb = createSandbox();
     const foreignTarget = path.join(sb.base, "elsewhere");
     fs.mkdirSync(foreignTarget);
-    const link = symlinkInScope(userClaude(), "foreign", foreignTarget);
+    const link = symlinkInScope(scopeSkillsDir("user"), "foreign", foreignTarget);
 
     await doctor({ fix: true });
     expect(fs.lstatSync(link).isSymbolicLink()).toBe(true);

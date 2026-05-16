@@ -6,11 +6,8 @@ import {
   saveRegistry,
   type Registry,
 } from "../lib/registry.js";
-import {
-  skillsStore,
-  userClaude,
-  findProjectRoot,
-} from "../lib/paths.js";
+import { skillsStore, findProjectRoot } from "../lib/paths.js";
+import { scopeSkillsDir } from "../lib/scope.js";
 
 type IssueKind =
   | "broken-symlink"
@@ -30,10 +27,9 @@ const STALE_TMP_AGE_MS = 60 * 60 * 1000; // 1 hour
 
 function scanLinks(
   scopeName: "user" | "project",
-  scopeDir: string,
+  dir: string,
   reg: Registry,
 ): Issue[] {
-  const dir = path.join(scopeDir, "skills");
   if (!fs.existsSync(dir)) return [];
   const issues: Issue[] = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -71,7 +67,9 @@ function scanLinks(
   return issues;
 }
 
-export async function doctor(opts: { fix?: boolean }): Promise<void> {
+export async function doctor(
+  opts: { fix?: boolean; agentDir?: string },
+): Promise<void> {
   const reg = loadRegistry();
   const issues: Issue[] = [];
 
@@ -119,9 +117,19 @@ export async function doctor(opts: { fix?: boolean }): Promise<void> {
     }
   }
 
-  issues.push(...scanLinks("user", userClaude(), reg));
+  issues.push(
+    ...scanLinks("user", scopeSkillsDir("user", { agentDir: opts.agentDir }), reg),
+  );
   const root = findProjectRoot();
-  if (root) issues.push(...scanLinks("project", path.join(root, ".claude"), reg));
+  if (root) {
+    issues.push(
+      ...scanLinks(
+        "project",
+        scopeSkillsDir("project", { agentDir: opts.agentDir }),
+        reg,
+      ),
+    );
+  }
 
   if (issues.length === 0) {
     console.log(pc.green("✓ healthy — no issues found"));
