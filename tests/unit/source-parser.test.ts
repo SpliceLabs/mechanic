@@ -163,3 +163,20 @@ describe("sanitizeSubpath", () => {
     expect(sanitizeSubpath("skills/web")).toBe("skills/web");
   });
 });
+
+describe("parseSource — builtin", () => {
+  it("resolves a bundled skill to a local source pointing at the bundled skill dir", () => {
+    const r = parseSource("builtin:use-mechanic");
+    expect(r.type).toBe("local");
+    expect(r.url).toMatch(/[\\/]skills[\\/]use-mechanic$/);
+    expect(r.localPath).toBe(r.url);
+  });
+
+  it("throws with helpful 'Available:' hint for unknown builtin name", () => {
+    expect(() => parseSource("builtin:does-not-exist")).toThrow(/Available:/);
+  });
+
+  it("rejects names with unsafe characters", () => {
+    expect(() => parseSource("builtin:../etc/passwd")).toThrow();
+  });
+});

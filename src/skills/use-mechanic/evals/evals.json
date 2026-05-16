@@ -1,0 +1,48 @@
+{
+  "skill_name": "use-mechanic",
+  "evals": [
+    {
+      "id": 0,
+      "name": "add-github-skill-globally",
+      "prompt": "ok so theres this skill at https://github.com/anthropics/skills that has a bunch of useful stuff for working with PDFs (its in /skills/pdf-processing inside that repo i think). i want it available in every claude code session i open, not just for one project. walk me through getting it set up with mechanic. use my actual machine — i have mechanic installed already and you can run commands. dont actually leave it enabled at the end, disable+remove when youre done so my system stays clean.",
+      "expected_output": "Add the pdf-processing skill from GitHub, enable at user scope, then disable + remove.",
+      "files": [],
+      "assertions": [
+        {"text": "Used `mechanic skill add` with a source pointing at anthropics/skills's pdf-processing subpath"},
+        {"text": "Activated the skill at user scope (`mechanic skill enable <id> --scope user`)"},
+        {"text": "Did NOT run `mechanic init` in the user's cwd"},
+        {"text": "Cleaned up at the end so the registry is empty"},
+        {"text": "Final response explained the add-then-enable distinction"}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "team-project-lock-workflow",
+      "prompt": "im setting up a fresh repo at ~/tmp/mechanic-eval-team and i want my teammates to automatically get the same set of skills when they clone it. lets pretend the skills are at github.com/anthropics/skills/skills/canvas-design and github.com/anthropics/skills/skills/pdf-processing. set this up end-to-end so that a teammate could just clone and run one command to get the skills wired up. show me what they would commit and what command the teammate runs. clean everything up afterwards (rm the directory, remove the registered skills).",
+      "expected_output": "init + add both + enable at project scope; tells user to commit .mechanic.json + mechanic.lock; tells teammate to run `mechanic install`; cleans up.",
+      "files": [],
+      "assertions": [
+        {"text": "Ran `mechanic init` inside the project dir before enabling skills"},
+        {"text": "Used `mechanic skill add` for BOTH canvas-design and pdf-processing"},
+        {"text": "Activated both skills at project scope"},
+        {"text": "Final response correctly identifies commit set: .mechanic.json + mechanic.lock (+ .gitignore); does NOT recommend committing .claude/skills/"},
+        {"text": "Final response tells the teammate to run `mechanic install`"},
+        {"text": "Cleaned up: removed dir + `mechanic skill remove` for both"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "diagnose-missing-skill",
+      "prompt": "i added a skill yesterday — i think it was called something like 'canvas-design' — and i swear claude code isnt picking it up in this project. can you figure out whats going on? im in /tmp and i dont remember whether i enabled it for this project or globally. you have full access to my machine, poke around and figure out what state things are in, then tell me what to do (or do it). if there are no mechanic skills installed at all, just confirm that and stop — no need to install one to demonstrate.",
+      "expected_output": "Inspect with list/info, recognize empty registry + /tmp not a project, give concrete next step, do NOT install anything.",
+      "files": [],
+      "assertions": [
+        {"text": "Ran `mechanic skill list` (and/or `info`) to inspect state"},
+        {"text": "Did NOT install or register any skill during diagnosis"},
+        {"text": "Recognized /tmp is not a mechanic project"},
+        {"text": "Final response states registry is empty, does NOT fabricate findings about canvas-design"},
+        {"text": "Final response gives a concrete next step"}
+      ]
+    }
+  ]
+}

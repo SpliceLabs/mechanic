@@ -21,6 +21,9 @@ mechanic skill add https://github.com/some-org/cool-skill.git
 # shorthand: owner/repo
 mechanic skill add some-org/cool-skill
 
+# bundled with mechanic — teaches agents how to drive the CLI itself
+mechanic skill add builtin:use-mechanic
+
 # a skill inside a monorepo (subpath, branch, or @name filter)
 mechanic skill add anthropics/skills/skills/canvas-design
 mechanic skill add anthropics/skills@canvas-design
@@ -59,6 +62,8 @@ mechanic install
 
 **`.skill` archives.** A `.skill` file is a plain zip containing a skill. Mechanic accepts either layout: `SKILL.md` at the archive root, or wrapped in a single top-level directory. Useful for distributing a skill as a single file.
 
+**Built-in skills.** Mechanic ships a small set of skills inside the npm package under `dist/skills/`. Register one with `mechanic skill add builtin:<name>` &mdash; it resolves to the bundled directory and installs as a local source (symlinked into the store, so upgrading the `@splicelabs/mechanic` package transparently updates the skill). Currently bundled: `use-mechanic` (teaches an agent how to drive the `mechanic` CLI).
+
 **Scopes.** Mechanic activates skills in two scopes:
 
 - **user** &mdash; `~/.claude/skills/`, available to every Claude Code session for your user.
@@ -78,7 +83,7 @@ Skill operations live under `mechanic skill <verb>`. Project-level commands (`in
 
 | Command | Description |
 | --- | --- |
-| `mechanic skill add <source>` | Register a skill. Sources: git URL, GitHub shorthand (`owner/repo`, with optional `/subpath`, `@skill-name`, or `#ref`), GitLab URL or `gitlab:owner/repo`, local path, or a `.skill` zip archive. |
+| `mechanic skill add <source>` | Register a skill. Sources: git URL, GitHub shorthand (`owner/repo`, with optional `/subpath`, `@skill-name`, or `#ref`), GitLab URL or `gitlab:owner/repo`, local path, a `.skill` zip archive, or `builtin:<name>` for a skill bundled with mechanic. |
 | `mechanic skill find <source>` | Browse a repo (remote or local) for `SKILL.md` files and bulk-register the ones you pick. Useful for monorepos that ship many skills. |
 | `mechanic skill list` (`ls`) | Show every registered skill and whether it's active in each scope. |
 | `mechanic skill info <id>` | Print details for one skill: source, ref, store path, active scopes. |

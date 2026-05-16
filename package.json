@@ -29,10 +29,10 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node -e \"require('node:fs').cpSync('src/skills','dist/skills',{recursive:true,force:true,filter:(s)=>!/(^|[\\\\/])evals([\\\\/]|$)/.test(s)})\"",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
-    "pretest": "tsc",
+    "pretest": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "prepublishOnly": "npm run build"

@@ -1,4 +1,5 @@
 import path from "node:path";
+import { builtinSkillPath } from "./builtins.js";
 
 export type ParsedSourceType = "github" | "gitlab" | "git" | "local";
 
@@ -122,6 +123,14 @@ function appendFragment(
 }
 
 export function parseSource(input: string): ParsedSource {
+  if (input.startsWith("builtin:")) {
+    const name = input.slice("builtin:".length);
+    // builtinSkillPath validates the name and verifies the bundled skill exists,
+    // throwing a helpful "Available: ..." error if not.
+    const resolved = builtinSkillPath(name);
+    return { type: "local", url: resolved, localPath: resolved };
+  }
+
   if (isLocalPath(input)) {
     // Local bare repo (path ending in .git) is still cloneable as a git source.
     if (/\.git\/?$/.test(input)) {
