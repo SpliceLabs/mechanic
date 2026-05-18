@@ -43,6 +43,48 @@
         {"text": "Final response states registry is empty, does NOT fabricate findings about canvas-design"},
         {"text": "Final response gives a concrete next step"}
       ]
+    },
+    {
+      "id": 3,
+      "name": "discover-pr-review-skill",
+      "prompt": "i feel like im missing stuff in PR reviews — half the time i miss obvious bugs that bite us in prod a week later. is there a mechanic skill for this kinda thing? if so install it for me, globally so its available in every project. you can use the cli. dont leave anything installed when youre done.",
+      "expected_output": "Search at least one curated repo via `find --json`, install if a good match exists (`--scope user`), or honestly report none. Cleanup.",
+      "files": [],
+      "assertions": [
+        {"text": "Enumerated at least one curated repo via `mechanic skill find`"},
+        {"text": "Used `--json` (non-interactive)"},
+        {"text": "Installed a real, trustworthy match OR honestly reported none — no fabrications"},
+        {"text": "If installed: `--scope user`"},
+        {"text": "Cleanup: registry empty of task entries"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "discover-pdf-skill",
+      "prompt": "ok so my workflow this week is gonna be a ton of pdfs — pulling tables out, splitting them, occasionally OCRing scanned ones. find me a mechanic skill that handles pdfs (i dont know if one exists, you tell me). install it user-scope if it does. clean up at the end.",
+      "expected_output": "Discover `anthropics/skills/skills/pdf` via `find --json`, install user-scope, clean up.",
+      "files": [],
+      "assertions": [
+        {"text": "Discovered the pdf skill via `find` (not by guessing the path)"},
+        {"text": "Used `--json`"},
+        {"text": "Registered with the correct subpath (skills/pdf, not pdf-processing)"},
+        {"text": "Enabled at `--scope user`"},
+        {"text": "Cleanup: registry empty"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "discover-nonexistent-skill",
+      "prompt": "find me a mechanic skill that generates podcast show notes from raw transcripts (timestamps + chapter markers + a 200-word summary). i need it for a side project. dont install anything random — i only want it if its actually a maintained skill from a trustworthy source. report back what you find. clean up after yourself.",
+      "expected_output": "Search curated repos, conclude nothing fits, report honestly, suggest scaffolding own. Do NOT install anything.",
+      "files": [],
+      "assertions": [
+        {"text": "Enumerated at least one curated repo via `find --json` — showed work"},
+        {"text": "Did NOT install any skill"},
+        {"text": "Honest negative finding — no fabricated skills/repos"},
+        {"text": "Offered a concrete next step (do it inline, or `mechanic skill new`)"},
+        {"text": "Cleanup: registry remains empty"}
+      ]
     }
   ]
 }

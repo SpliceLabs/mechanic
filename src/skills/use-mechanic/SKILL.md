@@ -1,6 +1,6 @@
 ---
 name: use-mechanic
-description: How to operate the `mechanic` CLI to install, enable, share, and troubleshoot Claude Code skills. Use whenever the user wants to add a skill from GitHub/GitLab/a local path/a `.skill` archive, toggle a skill on or off, pin skills for teammates via `mechanic.lock`, reproduce a teammate's project skill setup with `mechanic install`, scan a tree for `SKILL.md` files, run `mechanic doctor`, or anything else involving the `mechanic` command — even if they describe the goal without naming `mechanic` (e.g. "wire this skill into my repo", "make this skill available everywhere", "restore the project's skills after cloning").
+description: How to operate the `mechanic` CLI to discover, install, enable, share, and troubleshoot Claude Code skills. Use whenever the user wants to add a skill from GitHub/GitLab/a local path/a `.skill` archive, toggle a skill on or off, pin skills for teammates via `mechanic.lock`, reproduce a teammate's project skill setup with `mechanic install`, scan a tree for `SKILL.md` files, run `mechanic doctor`, or anything else involving the `mechanic` command — including discovery-shaped questions like "is there a skill for X", "find me a skill that does Y", "how do I get Claude better at Z" — even if they describe the goal without naming `mechanic` (e.g. "wire this skill into my repo", "make this skill available everywhere", "restore the project's skills after cloning").
 ---
 
 # Use mechanic
@@ -31,6 +31,19 @@ Choose explicitly when you're unsure what the user wants:
 - "For this repo", "for the team", "for this project" → `--scope project` (and ensure `mechanic init` has been run; project scope writes `mechanic.lock`).
 
 If you're not sure which the user means, ask. Picking wrong leaves a confusing trail (lock entries they didn't want, or symlinks in `~/.claude/skills` they have to clean up).
+
+## Discovering new skills
+
+If the user is asking "is there a skill for X" / "find me something that does Y" / "how do I make Claude better at Z" — i.e. they don't yet know which skill they want — the install flows below skip a step. You need to *find* a candidate first.
+
+Read `references/finding-skills.md` for the full discovery playbook (which curated repos to check, how to use `mechanic skill find --json` to enumerate them, how to judge quality without install counts, when to fall back to GitHub search, and how to present findings to the user). The short version:
+
+1. `mechanic skill list` — make sure they don't already have it
+2. `mechanic skill find <curated-repo> --json` — enumerate candidates in well-known collections (`anthropics/skills`, `vercel-labs/agent-skills`, `ComposioHQ/awesome-claude-skills`, plus whatever `mechanic skill list` shows under "Bundled built-ins")
+3. Verify the match is real (source reputation, recent commits, substantive SKILL.md) — don't recommend a skill you haven't at least skimmed
+4. Present it, ask scope (user vs project), then jump into the install flow below
+
+If nothing fits, say so plainly and offer to do the task inline; don't fabricate a skill that doesn't exist.
 
 ## The common flows
 
