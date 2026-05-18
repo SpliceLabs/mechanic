@@ -29,7 +29,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc && node -e \"require('node:fs').cpSync('src/skills','dist/skills',{recursive:true,force:true,filter:(s)=>!/(^|[\\\\/])evals([\\\\/]|$)/.test(s)})\"",
+    "build": "tsc && node -e \"require('node:fs').cpSync('src/skills','dist/skills',{recursive:true,force:true,filter:(s)=>!/(^|[\\\\/])evals([\\\\/]|$)/.test(s)})\" && chmod +x dist/index.js",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
     "pretest": "npm run build",
