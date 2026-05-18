@@ -194,15 +194,29 @@ export function parseSource(input: string): ParsedSource {
     };
   }
 
-  // GitHub plain repo URL
-  const githubRepo = input.match(/github\.com\/([^/]+)\/([^/]+)/);
+  // GitHub plain repo URL, with optional /subpath after the repo segment.
+  // (tree/<ref>/<subpath> URLs are matched above; this catches the
+  // bare `github.com/owner/repo[/subpath]?[.git]?` form.) A path that
+  // starts with a GitHub UI keyword (blob/, pull/, issues/, …) is treated
+  // as a UI link rather than a skill subpath — we still resolve the
+  // owner/repo but drop the trailing segment.
+  const githubRepo = input.match(
+    /github\.com\/([^/]+)\/([^/]+?)(?:\.git)?(?:\/(.+?))?\/?$/,
+  );
   if (githubRepo) {
-    const [, owner, repo] = githubRepo;
-    const cleanRepo = repo!.replace(/\.git$/, "");
+    const [, owner, repo, rawSubpath] = githubRepo;
+    const isGithubUiPath =
+      rawSubpath !== undefined &&
+      /^(?:tree|blob|pull|issues|wiki|releases|commit|compare|actions|raw|projects|security|settings|fork|watchers|stargazers|network|discussions|pulse|graphs|community)(?:\/|$)/.test(
+        rawSubpath,
+      );
+    const subpath =
+      rawSubpath && !isGithubUiPath ? sanitizeSubpath(rawSubpath) : undefined;
     return {
       type: "github",
-      url: `https://github.com/${owner}/${cleanRepo}.git`,
+      url: `https://github.com/${owner}/${repo}.git`,
       ...(fragmentRef ? { ref: fragmentRef } : {}),
+      ...(subpath ? { subpath } : {}),
       ...(fragmentSkillFilter ? { skillFilter: fragmentSkillFilter } : {}),
     };
   }

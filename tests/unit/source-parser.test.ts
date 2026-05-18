@@ -74,6 +74,26 @@ describe("parseSource — github", () => {
     });
   });
 
+  it("parses plain github URL with /subpath", () => {
+    expect(
+      parseSource("https://github.com/anthropics/skills/skills/pdf"),
+    ).toEqual({
+      type: "github",
+      url: "https://github.com/anthropics/skills.git",
+      subpath: "skills/pdf",
+    });
+  });
+
+  it("parses plain github URL with /subpath and trailing slash", () => {
+    expect(
+      parseSource("https://github.com/anthropics/skills/skills/pdf/"),
+    ).toEqual({
+      type: "github",
+      url: "https://github.com/anthropics/skills.git",
+      subpath: "skills/pdf",
+    });
+  });
+
   it("parses shorthand with #ref fragment", () => {
     expect(parseSource("owner/repo#feature/x")).toEqual({
       type: "github",
