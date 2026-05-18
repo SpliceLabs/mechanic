@@ -26,7 +26,7 @@ describe("find (local source)", () => {
     writeSkillFixture(path.join(repo, "packages", "beta"), "beta");
     writeSkillFixture(path.join(repo, "deep", "nested", "gamma"), "gamma");
 
-    await find(repo);
+    await find(repo, { all: true });
 
     const reg = loadRegistry();
     expect(Object.keys(reg.skills).sort()).toEqual(["alpha", "beta", "gamma"]);
@@ -45,7 +45,7 @@ describe("find (local source)", () => {
     writeSkillFixture(path.join(repo, "a", "shared"), "shared");
     writeSkillFixture(path.join(repo, "b", "shared"), "shared");
 
-    await find(repo);
+    await find(repo, { all: true });
 
     const ids = Object.keys(loadRegistry().skills).sort();
     expect(ids).toEqual(["shared", "shared-2"]);
@@ -53,8 +53,46 @@ describe("find (local source)", () => {
 
   it("errors out when path does not exist", async () => {
     sb = createSandbox();
-    await expect(find(path.join(sb.base, "missing"))).rejects.toThrow(
-      /Path not found/,
-    );
+    await expect(
+      find(path.join(sb.base, "missing"), { all: true }),
+    ).rejects.toThrow(/Path not found/);
+  });
+
+  it("refuses to run interactively when stdin is not a TTY", async () => {
+    sb = createSandbox();
+    const repo = path.join(sb.base, "repo");
+    writeSkillFixture(path.join(repo, "skills", "alpha"), "alpha");
+    await expect(find(repo)).rejects.toThrow(/--json.*--all/);
+  });
+
+  it("--json emits discovery metadata without registering anything", async () => {
+    sb = createSandbox();
+    const repo = path.join(sb.base, "repo");
+    writeSkillFixture(path.join(repo, "skills", "alpha"), "alpha");
+    writeSkillFixture(path.join(repo, "skills", "beta"), "beta");
+
+    const writes: string[] = [];
+    const origWrite = process.stdout.write.bind(process.stdout);
+    process.stdout.write = ((chunk: unknown) => {
+      writes.push(String(chunk));
+      return true;
+    }) as typeof process.stdout.write;
+    try {
+      await find(repo, { json: true });
+    } finally {
+      process.stdout.write = origWrite;
+    }
+
+    const out = JSON.parse(writes.join(""));
+    expect(Array.isArray(out)).toBe(true);
+    expect(out.map((e: { proposedId: string }) => e.proposedId).sort()).toEqual([
+      "alpha",
+      "beta",
+    ]);
+    for (const e of out) {
+      expect(e).toHaveProperty("subpath");
+      expect(e).toHaveProperty("alreadyRegistered", false);
+    }
+    expect(Object.keys(loadRegistry().skills)).toEqual([]);
   });
 });

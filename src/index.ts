@@ -96,7 +96,17 @@ skill
     "Browse a repo (remote or local) for SKILL.md files and pick which to register",
   )
   .argument("<source>", "git URL, GitHub shorthand, or local path")
-  .action(find);
+  .option(
+    "--json",
+    "Print discovered skills as JSON and exit without registering (non-interactive)",
+  )
+  .option(
+    "--all",
+    "Register every discovered skill without prompting (non-interactive)",
+  )
+  .action((source: string, opts: { json?: boolean; all?: boolean }) =>
+    find(source, opts),
+  );
 
 skill
   .command("scan")

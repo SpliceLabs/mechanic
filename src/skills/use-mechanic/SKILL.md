@@ -110,7 +110,11 @@ User scope follows the same path under `$HOME` (`~/.cursor/skills/` in the examp
 mechanic skill scan                                    # walks user + project .claude/skills, offers to adopt unmanaged dirs
 mechanic skill scan ./some/tree --verbose              # walk arbitrary tree; verbose explains why each path was kept/skipped
 mechanic skill find owner/monorepo                     # browse a remote/local repo, multi-select which SKILL.md dirs to register
+mechanic skill find owner/monorepo --json              # non-interactive: print every discovered skill as JSON (proposedId, subpath, description, alreadyRegistered) so agents can pick a target subpath before calling `add`
+mechanic skill find owner/monorepo --all               # non-interactive: register every discovered skill in one clone (avoids re-cloning per `add`)
 ```
+
+`--json` and `--all` make `find` safe for non-TTY contexts (CI, agents). With no flag and no TTY, `find` errors out rather than hanging on a picker that can't render.
 
 `scan` **copies** skills into the store (source tree is never mutated). After adopting, the original directory is still sitting in the scope's skills dir as a real folder — to make mechanic own activation in that scope, run `mechanic skill enable <id> --replace`. Without `--replace`, enable refuses to clobber a real directory.
 

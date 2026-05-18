@@ -84,7 +84,7 @@ Skill operations live under `mechanic skill <verb>`. Project-level commands (`in
 | Command | Description |
 | --- | --- |
 | `mechanic skill add <source>` | Register a skill. Sources: git URL, GitHub shorthand (`owner/repo`, with optional `/subpath`, `@skill-name`, or `#ref`), GitLab URL or `gitlab:owner/repo`, local path, a `.skill` zip archive, or `builtin:<name>` for a skill bundled with mechanic. |
-| `mechanic skill find <source>` | Browse a repo (remote or local) for `SKILL.md` files and bulk-register the ones you pick. Useful for monorepos that ship many skills. |
+| `mechanic skill find <source>` | Browse a repo (remote or local) for `SKILL.md` files and bulk-register the ones you pick. Useful for monorepos that ship many skills. Add `--json` to list discovered skills as JSON without registering (good for agents/CI), or `--all` to register every match non-interactively. |
 | `mechanic skill list` (`ls`) | Show every registered skill and whether it's active in each scope. |
 | `mechanic skill info <id>` | Print details for one skill: source, ref, store path, active scopes. |
 | `mechanic skill enable <id> [--scope user\|project] [--replace]` | Activate a skill in a scope. Defaults to project if you're inside one. `--replace` removes a real directory at the scope path before installing the symlink. |

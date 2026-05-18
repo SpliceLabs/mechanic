@@ -13,9 +13,26 @@ import { sanitizeMetadata } from "../lib/sanitize.js";
 import { parseSource } from "../lib/source-parser.js";
 import { skillPicker } from "../lib/skill-picker.js";
 
-export async function find(source: string): Promise<void> {
+export interface FindOptions {
+  /** Print discovered skills as JSON and exit without registering. */
+  json?: boolean;
+  /** Register every discovered skill without prompting. */
+  all?: boolean;
+}
+
+export async function find(
+  source: string,
+  opts: FindOptions = {},
+): Promise<void> {
   ensureMechanicHome();
   const registry = loadRegistry();
+
+  if (!opts.json && !opts.all && !process.stdin.isTTY) {
+    throw new Error(
+      "`mechanic skill find` is interactive by default. " +
+        "Pass --json to list discovered skills, or --all to register every match.",
+    );
+  }
 
   const parsed = parseSource(source);
 
@@ -54,40 +71,68 @@ export async function find(source: string): Promise<void> {
   try {
     const found = findSkillsIn(searchRoot);
     if (found.length === 0) {
-      console.log(pc.dim(`No SKILL.md found in ${source}`));
+      if (opts.json) {
+        process.stdout.write(JSON.stringify([], null, 2) + "\n");
+      } else {
+        console.log(pc.dim(`No SKILL.md found in ${source}`));
+      }
       return;
     }
 
-    const cols = process.stdout.columns ?? 80;
-    const items = found.map((entry, i) => {
-      const rel =
-        path.relative(searchRoot, entry.dir) || path.basename(entry.dir);
-      const proposedId = slugify(entry.fm.name);
-      const name = sanitizeMetadata(entry.fm.name);
-      const description = entry.fm.description
-        ? sanitizeMetadata(entry.fm.description)
-        : "";
-      const collision = registry.skills[proposedId]
-        ? pc.yellow(" (id taken)")
-        : "";
-      const head = `${proposedId.padEnd(24)} ${pc.dim(rel)}${collision}`;
-      const headRaw = `${proposedId.padEnd(24)} ${rel}${collision ? " (id taken)" : ""}`;
-      const tail = description || name;
-      const budget = Math.max(20, cols - 6 - headRaw.length - 3);
-      const tailTrunc =
-        tail.length > budget ? tail.slice(0, budget - 1) + "…" : tail;
-      return {
-        value: i,
-        label: `${head} ${pc.dim(`· ${tailTrunc}`)}`,
-        searchKey: `${proposedId} ${name} ${rel} ${description}`,
-      };
-    });
+    if (opts.json) {
+      const out = found.map((entry) => {
+        const rel =
+          path.relative(searchRoot, entry.dir) || path.basename(entry.dir);
+        const proposedId = slugify(entry.fm.name);
+        return {
+          name: sanitizeMetadata(entry.fm.name),
+          proposedId,
+          subpath: rel,
+          description: entry.fm.description
+            ? sanitizeMetadata(entry.fm.description)
+            : null,
+          alreadyRegistered: Boolean(registry.skills[proposedId]),
+        };
+      });
+      process.stdout.write(JSON.stringify(out, null, 2) + "\n");
+      return;
+    }
 
-    const picked = await skillPicker({
-      message: `Skills in ${source}`,
-      items,
-      pageSize: 15,
-    });
+    let picked: number[];
+    if (opts.all) {
+      picked = found.map((_, i) => i);
+    } else {
+      const cols = process.stdout.columns ?? 80;
+      const items = found.map((entry, i) => {
+        const rel =
+          path.relative(searchRoot, entry.dir) || path.basename(entry.dir);
+        const proposedId = slugify(entry.fm.name);
+        const name = sanitizeMetadata(entry.fm.name);
+        const description = entry.fm.description
+          ? sanitizeMetadata(entry.fm.description)
+          : "";
+        const collision = registry.skills[proposedId]
+          ? pc.yellow(" (id taken)")
+          : "";
+        const head = `${proposedId.padEnd(24)} ${pc.dim(rel)}${collision}`;
+        const headRaw = `${proposedId.padEnd(24)} ${rel}${collision ? " (id taken)" : ""}`;
+        const tail = description || name;
+        const budget = Math.max(20, cols - 6 - headRaw.length - 3);
+        const tailTrunc =
+          tail.length > budget ? tail.slice(0, budget - 1) + "…" : tail;
+        return {
+          value: i,
+          label: `${head} ${pc.dim(`· ${tailTrunc}`)}`,
+          searchKey: `${proposedId} ${name} ${rel} ${description}`,
+        };
+      });
+
+      picked = await skillPicker({
+        message: `Skills in ${source}`,
+        items,
+        pageSize: 15,
+      });
+    }
 
     if (picked.length === 0) {
       console.log(pc.dim("Nothing selected."));
